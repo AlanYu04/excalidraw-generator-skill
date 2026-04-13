@@ -131,15 +131,7 @@ Every shape builder accepts:
 
 ## CJK Text Support
 
-Built-in CJK-aware width estimation ensures Chinese/Japanese/Korean text centers correctly:
-
-| Character Type | Width | Examples |
-|---------------|-------|---------|
-| CJK Ideographs | 1.05 × fontSize | 你好世界 |
-| Latin/ASCII | 0.62 × fontSize | ABCdef |
-| Space | 0.35 × fontSize | |
-
-All `labeled_rect()` elements use `containerId` binding — Excalidraw auto-centers the text.
+Built-in CJK-aware width estimation ensures Chinese, Japanese, and Korean text centers correctly in diagrams. No extra configuration needed.
 
 ---
 
