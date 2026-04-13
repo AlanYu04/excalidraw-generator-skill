@@ -36,17 +36,17 @@ def demo_svg_converter():
     # Rectangle from SVG
     svg_rect = '<svg viewBox="0 0 100 80"><rect x="10" y="10" width="80" height="60" fill="#a5d8ff" stroke="#1971c2"/></svg>'
     rect_els = svg_to_elements(svg_rect, x=30, y=120, scale=1.0, stroke="#1971c2")
-    rect_label = text_standalone(70, 210, "SVG <rect>", fs=12, color="#868e96")
+    rect_label = text_standalone(70, 225, "SVG <rect>", fs=12, color="#868e96")
 
     # Circle from SVG
     svg_circle = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#b2f2bb" stroke="#2f9e44"/></svg>'
     circle_els = svg_to_elements(svg_circle, x=180, y=120, scale=1.0, stroke="#2f9e44")
-    circle_label = text_standalone(220, 210, "SVG <circle>", fs=12, color="#868e96")
+    circle_label = text_standalone(220, 245, "SVG <circle>", fs=12, color="#868e96")
 
     # Triangle from SVG path
     svg_tri = '<svg viewBox="0 0 100 100"><path d="M50 10 L90 90 L10 90 Z" fill="#ffd8a8" stroke="#e8590c"/></svg>'
     tri_els = svg_to_elements(svg_tri, x=320, y=120, scale=1.0, stroke="#e8590c")
-    tri_label = text_standalone(360, 210, "SVG <path>", fs=12, color="#868e96")
+    tri_label = text_standalone(360, 245, "SVG <path>", fs=12, color="#868e96")
 
     # --- Section 2: Bezier curves ---
     section2 = text_standalone(200, 250, "Bezier curves → polyline elements", fs=14, color="#868e96")

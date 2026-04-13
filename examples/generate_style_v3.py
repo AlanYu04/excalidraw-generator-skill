@@ -97,9 +97,9 @@ def demo_vivid():
 
     # Result highlight
     y5 = y4 + 3 * (ch + cgap_y) + 20
-    els.append(rect(30, y5, 930, 45, fill=s.success_fill, stroke=s.success, sw=3,
-                roughness=rough, fill_style=fsty))
-    els.append(text_standalone(cx, y5 + 14, "Vivid: Cascadia(fontFamily=3) + solid + roughness=1 + 7色", fs=16, color=s.success, font_family=ff))
+    els.extend(labeled_rect(30, y5, 930, 45, "Vivid: Cascadia(fontFamily=3) + solid + roughness=1 + 7色",
+                fill=s.success_fill, stroke=s.success, sw=3,
+                roughness=rough, fill_style=fsty, fs=16, label_color=s.success, font_family=ff))
 
     save_obsidian_md(os.path.join(OBSIDIAN, "demo-vivid.excalidraw.md"), els)
     print("  Vivid (rich)")
@@ -234,11 +234,10 @@ def demo_sketch():
 
     # Bottom bar
     y_bar = sy + sh + 30
-    els.append(rect(60, y_bar, 880, 45, fill="#d0bfff", stroke="#7048e8", sw=3,
-                roughness=rough, fill_style=fsty))
-    els.append(text_standalone(cx, y_bar + 22,
+    els.extend(labeled_rect(60, y_bar, 880, 45,
         "Sketch: Virgil(fontFamily=1) + hachure填充 + roughness=2 + 手绘感",
-        fs=s.body_size, color="#7048e8", font_family=ff))
+        fill="#d0bfff", stroke="#7048e8", sw=3,
+        roughness=rough, fill_style=fsty, fs=s.body_size, label_color="#7048e8", font_family=ff))
 
     save_obsidian_md(os.path.join(OBSIDIAN, "demo-sketch.excalidraw.md"), els)
     print("  Sketch (hand-drawn)")
