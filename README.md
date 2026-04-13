@@ -2,7 +2,7 @@
 
 > Python-based Excalidraw diagram generator for Claude Code. Generate publication-quality flowcharts, charts, and diagrams with CJK support.
 
-**40 Built-in Icons | 4 Chart Types | 3 Style Presets | CJK Support | Zero Dependencies***
+**39 Built-in Icons | 4 Chart Types | 3 Style Presets | CJK Support | Zero Dependencies***
 
 (* AI icon generation requires a Gemini API key; YAML styles require PyYAML)
 
@@ -12,7 +12,7 @@
 
 - **Element builders** -- rectangles, ellipses, diamonds, arrows, lines, text -- all with `containerId` binding
 - **4 chart types** -- bar, horizontal bar, line, pie (with donut mode)
-- **40 built-in icons** -- general + ML/AI + utility
+- **39 built-in icons** -- general + ML/AI + utility
 - **AI-powered icon generation** via Gemini API
 - **3 style presets** -- Vivid, Clean, Sketch + custom YAML
 - **SVG-to-Excalidraw conversion** with Bezier tessellation and shape classification
@@ -161,7 +161,7 @@ elements = pie_chart(
 
 ---
 
-## Icons (40 Built-in)
+## Icons (39 Built-in)
 
 ### General (10)
 
@@ -387,7 +387,7 @@ excalidraw-generator/
 ├── core/
 │   ├── __init__.py
 │   ├── engine.py               # Element builders, layout helpers, output
-│   ├── icons.py                # 40 built-in icons
+│   ├── icons.py                # 39 built-in icons
 │   ├── charts.py               # Bar, horizontal bar, line, pie charts
 │   ├── svg_converter.py        # SVG to Excalidraw conversion
 │   ├── icon_library.py         # Persistent icon library & TF-IDF search
