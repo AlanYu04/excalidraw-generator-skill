@@ -32,13 +32,13 @@ def diagram_how_it_works():
     # ---- Step 1: User Input ----
     y1 = 70
     els.extend(labeled_ellipse(cx - 80, y1, 160, 45, "User Request", fill=PURPLE_BG, stroke=PURPLE_FG, sw=2, fs=16, label_color=PURPLE_FG))
-    els.append(text_standalone(cx, y1 + 35, '"Draw a pipeline diagram"', fs=11, color=GRAY_FG))
+    els.append(text_standalone(cx, y1 + 55, '"Draw a pipeline diagram"', fs=11, color=GRAY_FG))
 
     # Arrow down
-    els.append(arrow(cx, y1 + 48, 0, 12, stroke=GRAY_FG, sw=2))
+    els.append(arrow(cx, y1 + 68, 0, 12, stroke=GRAY_FG, sw=2))
 
     # ---- Step 2: Config Selection ----
-    y2 = y1 + 50
+    y2 = y1 + 85
     cfg_w = 140
     cfg_h = 50
     cfg_gap = 20
