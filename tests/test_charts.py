@@ -137,3 +137,71 @@ def test_hbar_no_values():
     texts_content = [el["text"] for el in texts]
     assert "10" not in texts_content
     assert "20" not in texts_content
+
+
+# ---------------------------------------------------------------------------
+# Line Chart
+# ---------------------------------------------------------------------------
+def test_line_chart_empty():
+    from core.charts import line_chart
+    assert line_chart(x=0, y=0, data={}, labels=[]) == []
+
+def test_line_chart_basic():
+    from core.charts import line_chart
+    data = {"Sales": [10, 30, 20, 50]}
+    labels = ["Jan", "Feb", "Mar", "Apr"]
+    els = line_chart(x=50, y=50, data=data, labels=labels)
+    assert len(els) > 0
+    types = {e["type"] for e in els}
+    assert "line" in types
+    assert "text" in types
+
+def test_line_chart_multi_series():
+    from core.charts import line_chart
+    data = {"A": [10, 20], "B": [30, 10]}
+    labels = ["Q1", "Q2"]
+    els = line_chart(x=50, y=50, data=data, labels=labels)
+    assert len(els) > 0
+
+def test_line_chart_title():
+    from core.charts import line_chart
+    data = {"Sales": [10, 20]}
+    labels = ["A", "B"]
+    els = line_chart(x=50, y=50, data=data, labels=labels, title="Revenue")
+    texts = [e for e in els if e["type"] == "text"]
+    assert any("Revenue" in e["text"] for e in texts)
+
+def test_line_chart_no_points():
+    from core.charts import line_chart
+    data = {"Sales": [10, 20]}
+    labels = ["A", "B"]
+    els_with = line_chart(x=50, y=50, data=data, labels=labels, show_points=True)
+    els_without = line_chart(x=50, y=50, data=data, labels=labels, show_points=False)
+    ellipses_with = sum(1 for e in els_with if e["type"] == "ellipse")
+    ellipses_without = sum(1 for e in els_without if e["type"] == "ellipse")
+    assert ellipses_with > ellipses_without
+
+def test_line_chart_grid():
+    from core.charts import line_chart
+    data = {"A": [10, 20]}
+    labels = ["X", "Y"]
+    els_no = line_chart(x=50, y=50, data=data, labels=labels, show_grid=False)
+    els_yes = line_chart(x=50, y=50, data=data, labels=labels, show_grid=True)
+    assert len(els_yes) > len(els_no)
+
+def test_line_chart_custom_colors():
+    from core.charts import line_chart
+    data = {"A": [10, 20]}
+    labels = ["X", "Y"]
+    els = line_chart(x=50, y=50, data=data, labels=labels, series_colors={"A": "#ff0000"})
+    lines_red = [e for e in els if e["type"] == "line" and e["strokeColor"] == "#ff0000"]
+    assert len(lines_red) > 0
+
+def test_line_chart_legend():
+    from core.charts import line_chart
+    data = {"Series A": [10, 20], "Series B": [30, 10]}
+    labels = ["X", "Y"]
+    els = line_chart(x=50, y=50, data=data, labels=labels, show_legend=True)
+    texts = [e for e in els if e["type"] == "text"]
+    assert any("Series A" in e["text"] for e in texts)
+    assert any("Series B" in e["text"] for e in texts)

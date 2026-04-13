@@ -312,3 +312,219 @@ def horizontal_bar_chart(
             )
 
     return elements
+
+
+def line_chart(
+    x: float,
+    y: float,
+    data: Dict[str, List[Union[int, float]]],
+    labels: List[str],
+    title: Optional[str] = None,
+    series_colors: Optional[Dict[str, str]] = None,
+    default_color: str = "#1971c2",
+    axis_color: str = "#495057",
+    chart_width: int = 400,
+    chart_height: int = 200,
+    fs: int = 14,
+    label_fs: Optional[int] = None,
+    value_fs: Optional[int] = None,
+    title_fs: Optional[int] = None,
+    roughness: int = 1,
+    font_family: int = 3,
+    stroke_width: int = 2,
+    show_points: bool = True,
+    show_values: bool = False,
+    show_grid: bool = False,
+    grid_color: str = "#dee2e6",
+    grid_lines: int = 5,
+    show_legend: bool = True,
+) -> List[Dict[str, Any]]:
+    """Generate a hand-drawn line chart as Excalidraw elements.
+
+    Args:
+        x: Top-left X coordinate of the chart area.
+        y: Top-left Y coordinate of the chart area.
+        data: Dict mapping series names to lists of numeric values.
+        labels: List of x-axis labels (one per data point).
+        title: Optional chart title displayed above.
+        series_colors: Optional per-series color overrides {name: color}.
+        default_color: Default line/point color.
+        axis_color: Color for axes.
+        chart_width: Width of the chart area in pixels.
+        chart_height: Height of the chart area in pixels.
+        fs: Base font size.
+        label_fs: Font size for x-axis labels (defaults to fs).
+        value_fs: Font size for value annotations (defaults to max(fs-2, 10)).
+        title_fs: Font size for title (defaults to fs + 8).
+        roughness: Excalidraw roughness level.
+        font_family: Excalidraw font family (1=Virgil, 2=Helvetica, 3=Cascadia).
+        stroke_width: Stroke width for lines and axes.
+        show_points: Show dot markers at data points.
+        show_values: Show numeric value at each point.
+        show_grid: Show horizontal grid lines.
+        grid_color: Color for grid lines.
+        grid_lines: Number of grid lines.
+        show_legend: Show series legend below chart.
+
+    Returns:
+        List of Excalidraw element dicts.
+    """
+    if not data:
+        return []
+
+    label_fs = label_fs or fs
+    value_fs = value_fs or max(fs - 2, 10)
+    title_fs = title_fs or (fs + 8)
+
+    # Compute max value across all series, guard against 0
+    max_val = max(max(vals) for vals in data.values())
+    if max_val == 0:
+        max_val = 1
+
+    # X spacing between data points
+    step_x = chart_width / max(len(labels) - 1, 1)
+
+    elements: List[Dict[str, Any]] = []
+
+    # Chart origin (bottom-left of plot area)
+    origin_x = x
+    origin_y = y + chart_height
+
+    # --- Title ---
+    if title:
+        elements.append(
+            engine.text_standalone(
+                x + chart_width / 2, y - title_fs,
+                title, fs=title_fs, color="#1e1e1e",
+                font_family=font_family,
+            )
+        )
+
+    # --- Grid lines ---
+    if show_grid:
+        for i in range(1, grid_lines + 1):
+            gy = origin_y - (chart_height * i / (grid_lines + 1))
+            elements.append(
+                engine.line(
+                    origin_x, gy, chart_width, 0,
+                    stroke=grid_color, sw=1, roughness=0,
+                )
+            )
+            # Tick value
+            tick_val = max_val * i / (grid_lines + 1)
+            tick_label = f"{tick_val:.0f}" if tick_val == int(tick_val) else f"{tick_val:.1f}"
+            elements.append(
+                engine.text_standalone(
+                    origin_x - 5, gy,
+                    tick_label, fs=value_fs, color="#868e96",
+                    font_family=font_family,
+                )
+            )
+
+    # --- Y-axis ---
+    elements.append(
+        engine.line(
+            origin_x, y, 0, chart_height,
+            stroke=axis_color, sw=stroke_width, roughness=roughness,
+        )
+    )
+
+    # --- X-axis ---
+    elements.append(
+        engine.line(
+            origin_x, origin_y, chart_width, 0,
+            stroke=axis_color, sw=stroke_width, roughness=roughness,
+        )
+    )
+
+    # --- Data series ---
+    for series_name, values in data.items():
+        color = default_color
+        if series_colors and series_name in series_colors:
+            color = series_colors[series_name]
+
+        # Compute point positions
+        points: List[Tuple[float, float]] = []
+        for j, val in enumerate(values):
+            px = origin_x + j * step_x
+            py = origin_y - (val / max_val) * chart_height
+            points.append((px, py))
+
+        # Connect points with line segments
+        for j in range(len(points) - 1):
+            x1, y1 = points[j]
+            x2, y2 = points[j + 1]
+            elements.append(
+                engine.line(
+                    x1, y1, x2 - x1, y2 - y1,
+                    stroke=color, sw=stroke_width, roughness=roughness,
+                )
+            )
+
+        # Point markers
+        if show_points:
+            for px, py in points:
+                dot_size = 8
+                elements.append(
+                    engine.ellipse(
+                        px - dot_size / 2, py - dot_size / 2,
+                        dot_size, dot_size,
+                        fill=color, stroke=color,
+                        sw=1, roughness=roughness,
+                    )
+                )
+
+        # Value annotations
+        if show_values:
+            for j, val in enumerate(values):
+                px, py = points[j]
+                val_text = f"{val:.0f}" if val == int(val) else f"{val:.1f}"
+                elements.append(
+                    engine.text_standalone(
+                        px, py - value_fs,
+                        val_text, fs=value_fs, color="#495057",
+                        font_family=font_family,
+                    )
+                )
+
+    # --- X-axis labels ---
+    for j, label in enumerate(labels):
+        lx = origin_x + j * step_x
+        ly = origin_y + label_fs + 5
+        elements.append(
+            engine.text_standalone(
+                lx, ly, label,
+                fs=label_fs, color="#495057",
+                font_family=font_family,
+            )
+        )
+
+    # --- Legend ---
+    if show_legend:
+        legend_y = origin_y + label_fs + 30
+        legend_x = origin_x
+        for series_name in data:
+            color = default_color
+            if series_colors and series_name in series_colors:
+                color = series_colors[series_name]
+
+            # Short colored line segment
+            elements.append(
+                engine.line(
+                    legend_x, legend_y, 20, 0,
+                    stroke=color, sw=stroke_width, roughness=roughness,
+                )
+            )
+            # Series name text
+            elements.append(
+                engine.text_standalone(
+                    legend_x + 28, legend_y,
+                    series_name, fs=label_fs, color="#495057",
+                    font_family=font_family,
+                )
+            )
+            # Move to next legend entry
+            name_width = engine.estimate_text_width(series_name, label_fs)
+            legend_x += 28 + name_width + 20
+
+    return elements
