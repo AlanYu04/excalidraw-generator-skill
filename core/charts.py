@@ -7,7 +7,10 @@ Supports CJK text labels, custom colors, value annotations, and grid lines.
 
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import math
+
 from . import engine
+from .svg_converter import svg_to_elements
 
 
 def bar_chart(
@@ -526,5 +529,194 @@ def line_chart(
             # Move to next legend entry
             name_width = engine.estimate_text_width(series_name, label_fs)
             legend_x += 28 + name_width + 20
+
+    return elements
+
+
+def _wedge_svg(
+    cx: float,
+    cy: float,
+    r: float,
+    start_angle: float,
+    end_angle: float,
+    fill: str,
+    stroke: str = "#495057",
+    stroke_width: int = 2,
+) -> str:
+    """Generate an SVG string for a single pie wedge."""
+    x1 = cx + r * math.cos(start_angle)
+    y1 = cy + r * math.sin(start_angle)
+    x2 = cx + r * math.cos(end_angle)
+    y2 = cy + r * math.sin(end_angle)
+    large_arc = 1 if (end_angle - start_angle) > math.pi else 0
+    d = (
+        f"M{cx},{cy} L{x1:.1f},{y1:.1f} "
+        f"A{r},{r} 0 {large_arc},1 {x2:.1f},{y2:.1f} Z"
+    )
+    return (
+        f'<svg viewBox="0 0 {2 * r:.0f} {2 * r:.0f}">'
+        f'<path d="{d}" fill="{fill}" stroke="{stroke}" '
+        f'stroke-width="{stroke_width}"/></svg>'
+    )
+
+
+def pie_chart(
+    x: float,
+    y: float,
+    data: Dict[str, Union[int, float]],
+    title: Optional[str] = None,
+    slice_colors: Optional[Dict[str, str]] = None,
+    default_colors: Optional[List[str]] = None,
+    axis_color: str = "#495057",
+    radius: int = 100,
+    fs: int = 14,
+    roughness: int = 1,
+    font_family: int = 3,
+    stroke_width: int = 2,
+    show_labels: bool = True,
+    show_percentages: bool = True,
+    show_legend: bool = True,
+    donut: bool = False,
+    donut_radius: int = 50,
+) -> List[Dict[str, Any]]:
+    """Generate a hand-drawn pie chart as Excalidraw elements.
+
+    Args:
+        x: X coordinate of the pie chart top-left corner.
+        y: Y coordinate of the pie chart top-left corner.
+        data: Dict mapping slice names to numeric values.
+        title: Optional chart title displayed above.
+        slice_colors: Optional per-slice color overrides {name: color}.
+        default_colors: Color palette (cycled through if fewer colors than slices).
+        axis_color: Color for wedge strokes.
+        radius: Pie radius in pixels.
+        fs: Base font size.
+        roughness: Excalidraw roughness level.
+        font_family: Excalidraw font family (1=Virgil, 2=Helvetica, 3=Cascadia).
+        stroke_width: Stroke width for wedge outlines.
+        show_labels: Show slice name labels around the pie.
+        show_percentages: Show percentage labels around the pie.
+        show_legend: Show a color-coded legend below the pie.
+        donut: Cut out a centre hole to create a donut chart.
+        donut_radius: Radius of the centre hole when donut=True.
+
+    Returns:
+        List of Excalidraw element dicts.
+    """
+    if not data:
+        return []
+
+    if default_colors is None:
+        default_colors = [
+            "#a5d8ff", "#b2f2bb", "#ffd8a8",
+            "#fcc2d7", "#d0bfff", "#99e9f2", "#fff3bf",
+        ]
+
+    total = sum(data.values())
+    if total == 0:
+        return []
+
+    elements: List[Dict[str, Any]] = []
+    title_fs = fs + 8
+
+    # Centre of the pie in output coordinates
+    cx = x + radius
+    cy = y + radius
+
+    # --- Title ---
+    if title:
+        elements.append(
+            engine.text_standalone(
+                cx, y - title_fs - 10,
+                title, fs=title_fs, color="#1e1e1e",
+                font_family=font_family,
+            )
+        )
+
+    # --- Wedges ---
+    start_angle = -math.pi / 2  # 12 o'clock
+    slice_info: List[Tuple[str, float, float, str]] = []  # (name, start, end, color)
+
+    for i, (name, value) in enumerate(data.items()):
+        sweep = (value / total) * 2 * math.pi
+        end_angle = start_angle + sweep
+
+        color = slice_colors.get(name, default_colors[i % len(default_colors)]) if slice_colors else default_colors[i % len(default_colors)]
+
+        svg_str = _wedge_svg(
+            radius, radius, radius,
+            start_angle, end_angle,
+            color, axis_color, stroke_width,
+        )
+        wedge_els = svg_to_elements(
+            svg_str, x=x, y=y, scale=1.0,
+            stroke=axis_color, stroke_width=stroke_width,
+            roughness=roughness,
+        )
+        elements.extend(wedge_els)
+        slice_info.append((name, start_angle, end_angle, color))
+        start_angle = end_angle
+
+    # --- Labels & Percentages ---
+    for name, sa, ea, _color in slice_info:
+        mid = (sa + ea) / 2
+        label_r = radius + 20
+
+        if show_labels:
+            lx = cx + label_r * math.cos(mid) + 20 * math.cos(mid)
+            ly = cy + label_r * math.sin(mid) + 20 * math.sin(mid)
+            elements.append(
+                engine.text_standalone(
+                    lx, ly, name,
+                    fs=fs, color="#495057",
+                    font_family=font_family,
+                )
+            )
+
+        if show_percentages:
+            pct = ((ea - sa) / (2 * math.pi)) * 100
+            pct_text = f"{pct:.1f}%"
+            px = cx + (label_r + 10) * math.cos(mid)
+            py = cy + (label_r + 10) * math.sin(mid) + fs + 4
+            elements.append(
+                engine.text_standalone(
+                    px, py, pct_text,
+                    fs=max(fs - 2, 10), color="#868e96",
+                    font_family=font_family,
+                )
+            )
+
+    # --- Donut hole ---
+    if donut:
+        elements.append(
+            engine.ellipse(
+                cx - donut_radius, cy - donut_radius,
+                donut_radius * 2, donut_radius * 2,
+                fill="#ffffff", stroke="#ffffff",
+                sw=0, roughness=0,
+            )
+        )
+
+    # --- Legend ---
+    if show_legend:
+        legend_y = y + 2 * radius + 30
+        legend_x = x
+        for i, (name, _sa, _ea, color) in enumerate(slice_info):
+            elements.append(
+                engine.rect(
+                    legend_x, legend_y, 16, 16,
+                    fill=color, stroke=axis_color,
+                    sw=1, roughness=roughness,
+                )
+            )
+            elements.append(
+                engine.text_standalone(
+                    legend_x + 22, legend_y,
+                    name, fs=fs, color="#495057",
+                    font_family=font_family,
+                )
+            )
+            name_width = engine.estimate_text_width(name, fs)
+            legend_x += 22 + name_width + 16
 
     return elements

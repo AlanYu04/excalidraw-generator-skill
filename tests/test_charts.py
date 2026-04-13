@@ -205,3 +205,77 @@ def test_line_chart_legend():
     texts = [e for e in els if e["type"] == "text"]
     assert any("Series A" in e["text"] for e in texts)
     assert any("Series B" in e["text"] for e in texts)
+
+
+# ---------------------------------------------------------------------------
+# Pie Chart
+# ---------------------------------------------------------------------------
+def test_pie_chart_empty():
+    from core.charts import pie_chart
+    assert pie_chart(x=0, y=0, data={}) == []
+
+
+def test_pie_chart_basic():
+    from core.charts import pie_chart
+    data = {"A": 60, "B": 40}
+    els = pie_chart(x=200, y=200, data=data)
+    assert len(els) > 0
+    types = {e["type"] for e in els}
+    assert "text" in types
+
+
+def test_pie_chart_title():
+    from core.charts import pie_chart
+    data = {"A": 60, "B": 40}
+    els = pie_chart(x=200, y=200, data=data, title="Market Share")
+    texts = [e for e in els if e["type"] == "text"]
+    assert any("Market Share" in e["text"] for e in texts)
+
+
+def test_pie_chart_no_labels():
+    from core.charts import pie_chart
+    data = {"A": 60, "B": 40}
+    els_with = pie_chart(x=200, y=200, data=data, show_labels=True)
+    els_without = pie_chart(x=200, y=200, data=data, show_labels=False)
+    texts_with = sum(1 for e in els_with if e["type"] == "text")
+    texts_without = sum(1 for e in els_without if e["type"] == "text")
+    assert texts_with > texts_without
+
+
+def test_pie_chart_percentages():
+    from core.charts import pie_chart
+    data = {"A": 60, "B": 40}
+    els = pie_chart(x=200, y=200, data=data, show_percentages=True)
+    texts = [e for e in els if e["type"] == "text"]
+    assert any("%" in e["text"] for e in texts)
+
+
+def test_pie_chart_donut():
+    from core.charts import pie_chart
+    data = {"A": 60, "B": 40}
+    els = pie_chart(x=200, y=200, data=data, donut=True, radius=100, donut_radius=40)
+    ellipses = [e for e in els if e["type"] == "ellipse" and e.get("backgroundColor") == "#ffffff"]
+    assert len(ellipses) >= 1
+
+
+def test_pie_chart_custom_colors():
+    from core.charts import pie_chart
+    data = {"A": 60, "B": 40}
+    els = pie_chart(x=200, y=200, data=data, slice_colors={"A": "#ff0000", "B": "#00ff00"})
+    assert len(els) > 0
+
+
+def test_pie_chart_single_slice():
+    from core.charts import pie_chart
+    data = {"Only": 100}
+    els = pie_chart(x=200, y=200, data=data)
+    assert len(els) > 0
+
+
+def test_pie_chart_legend():
+    from core.charts import pie_chart
+    data = {"Alpha": 60, "Beta": 40}
+    els = pie_chart(x=200, y=200, data=data, show_legend=True)
+    texts = [e for e in els if e["type"] == "text"]
+    assert any("Alpha" in e["text"] for e in texts)
+    assert any("Beta" in e["text"] for e in texts)
