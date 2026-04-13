@@ -16,25 +16,6 @@ Generate publication-quality flowcharts, architecture diagrams, charts, and more
 
 ---
 
-### 🔧 How It Works
-
-![Workflow](docs/images/workflow.png)
-
-### 🖼️ Gallery
-
-| Architecture | Charts | Icons |
-|:---:|:---:|:---:|
-| ![Architecture](docs/images/architecture.png) | ![Bar Chart](docs/images/bar-chart.png) | ![Icons](docs/images/icons.png) |
-| ![Line Chart](docs/images/line-chart.png) | ![Bar Chart 2](docs/images/bar-chart-2.png) | |
-
-### 🚀 Real-World Cases
-
-| Sensor Data Pipeline | Decision Transformer | OpenClaw Architecture |
-|:---:|:---:|:---:|
-| ![Case 1](docs/images/case-sensor.png) | ![Case 2](docs/images/case-decision-transformer.png) | ![Case 3](docs/images/case-openclaw.png) |
-
----
-
 ## ✨ Features
 
 | | Feature | Description |
@@ -51,6 +32,25 @@ Generate publication-quality flowcharts, architecture diagrams, charts, and more
 | 💾 | **Dual Output** | `.excalidraw` (JSON) or `.excalidraw.md` (Obsidian) |
 
 > \* AI icon generation requires a Gemini API key; YAML styles require PyYAML
+
+---
+
+### 🔧 How It Works
+
+![Workflow](docs/images/workflow.png)
+
+### 🖼️ Gallery
+
+| Architecture | Charts | Icons |
+|:---:|:---:|:---:|
+| ![Architecture](docs/images/architecture.png) | ![Bar Chart](docs/images/bar-chart.png) | ![Icons](docs/images/icons.png) |
+| ![Line Chart](docs/images/line-chart.png) | ![Bar Chart 2](docs/images/bar-chart-2.png) | |
+
+### 🚀 Real-World Cases
+
+| Sensor Data Pipeline | Decision Transformer | OpenClaw Architecture |
+|:---:|:---:|:---:|
+| ![Case 1](docs/images/case-sensor.png) | ![Case 2](docs/images/case-decision-transformer.png) | ![Case 3](docs/images/case-openclaw.png) |
 
 ---
 
