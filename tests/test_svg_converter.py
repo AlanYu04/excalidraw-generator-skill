@@ -357,3 +357,64 @@ def test_svg_with_cubic_bezier():
     elements = svg_to_elements(svg, x=0, y=0, scale=1.0)
     assert len(elements) >= 1
     assert elements[0]["type"] == "line"  # Curve becomes a polyline
+
+
+# ---------------------------------------------------------------------------
+# Ring Detection, Gradient Resolution, Opacity Compositing
+# ---------------------------------------------------------------------------
+from core.svg_converter import (
+    _detect_ring_shape,
+    _resolve_gradient_color,
+    _compose_opacity,
+)
+
+
+def test_detect_ring_shape_true():
+    """Two concentric rectangles should be detected as a ring."""
+    outer = [(0, 0), (100, 0), (100, 100), (0, 100), (0, 0)]
+    inner = [(20, 20), (80, 20), (80, 80), (20, 80), (20, 20)]
+    assert _detect_ring_shape([outer, inner]) is True
+
+
+def test_detect_ring_shape_false_single():
+    """Single polyline is not a ring."""
+    poly = [(0, 0), (100, 0), (100, 100), (0, 100), (0, 0)]
+    assert _detect_ring_shape([poly]) is False
+
+
+def test_detect_ring_shape_false_non_concentric():
+    """Two non-overlapping shapes are not a ring."""
+    a = [(0, 0), (10, 0), (10, 10), (0, 10), (0, 0)]
+    b = [(200, 200), (210, 200), (210, 210), (200, 210), (200, 200)]
+    assert _detect_ring_shape([a, b]) is False
+
+
+def test_resolve_gradient_color_linear():
+    svg = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <defs>
+        <linearGradient id="g1">
+          <stop offset="0" stop-color="#ff0000"/>
+          <stop offset="1" stop-color="#0000ff"/>
+        </linearGradient>
+      </defs>
+      <rect fill="url(#g1)" width="24" height="24"/>
+    </svg>'''
+    elements = svg_to_elements(svg, x=0, y=0)
+    assert len(elements) >= 1
+    bg = elements[0].get("backgroundColor", "transparent")
+    assert bg != "transparent"
+
+
+def test_compose_opacity_full():
+    assert _compose_opacity(1.0, 1.0) == 1.0
+
+
+def test_compose_opacity_half():
+    result = _compose_opacity(0.5, 0.5)
+    assert abs(result - 0.25) < 0.01
+
+
+def test_compose_opacity_none():
+    assert _compose_opacity(None, 0.5) == 0.5
+    assert _compose_opacity(0.5, None) == 0.5
+    assert _compose_opacity(None, None) == 1.0

@@ -426,3 +426,71 @@ def find_icons(
         })
 
     return results
+
+
+def import_excalidrawlib(
+    filepath: str,
+    descriptions: Optional[Dict[str, str]] = None,
+    tags_map: Optional[Dict[str, List[str]]] = None,
+    prefix: str = "",
+) -> List[str]:
+    """Import icons from an .excalidrawlib file into the personal library.
+
+    Args:
+        filepath: Path to the .excalidrawlib file.
+        descriptions: Optional dict mapping item name/slug to description.
+        tags_map: Optional dict mapping item name/slug to tag list.
+        prefix: Optional prefix for all imported icon names.
+
+    Returns:
+        List of imported icon names (slugs).
+    """
+    descriptions = descriptions or {}
+    tags_map = tags_map or {}
+
+    with open(filepath, "r", encoding="utf-8") as f:
+        lib = json.load(f)
+
+    items = lib.get("libraryItems", lib.get("library", []))
+    source_name = os.path.basename(filepath)
+    imported: List[str] = []
+
+    for item in items:
+        raw_name = item.get("name", "").strip()
+        if not raw_name:
+            continue
+        elements = item.get("elements", [])
+        if not elements:
+            continue
+
+        slug = re.sub(r"[^a-z0-9]+", "-", raw_name.lower()).strip("-")
+        name = f"{prefix}{slug}" if prefix else slug
+
+        if name in descriptions or raw_name in descriptions:
+            desc = descriptions.get(name, descriptions.get(raw_name, ""))
+        else:
+            texts = [
+                el.get("text", "") for el in elements
+                if el.get("type") == "text" and el.get("text")
+            ]
+            types = sorted(set(el.get("type", "") for el in elements))
+            desc = f"{raw_name}"
+            if texts:
+                desc += f" (contains: {', '.join(t.strip() for t in texts[:5])})"
+            desc += f" [{len(elements)} elements: {', '.join(types)}]"
+
+        tags = tags_map.get(name, tags_map.get(raw_name, []))
+        if not tags:
+            tags = [t for t in re.split(r"[\s\-_]+", raw_name.lower()) if len(t) > 1]
+
+        save_icon(
+            name=name,
+            elements=elements,
+            description=desc,
+            tags=tags,
+            source=f"excalidrawlib:{source_name}",
+            source_file=filepath,
+        )
+        imported.append(name)
+
+    return imported

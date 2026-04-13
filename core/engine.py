@@ -123,7 +123,14 @@ def labeled_rect(x, y, w, h, label, fill="transparent", stroke="#1e1e1e",
     }
     return [r, t]
 
-def arrow(x, y, dx, dy, stroke="#1e1e1e", sw=2, roughness=1):
+def arrow(x, y, dx=0, dy=0, *, x2=None, y2=None, stroke="#1e1e1e", sw=2, roughness=1):
+    """创建箭头。支持两种模式：
+    - 相对偏移: arrow(x, y, dx, dy)
+    - 绝对坐标: arrow(x, y, x2=end_x, y2=end_y)
+    """
+    if x2 is not None or y2 is not None:
+        dx = (x2 if x2 is not None else x) - x
+        dy = (y2 if y2 is not None else y) - y
     return {
         "id": uid(), "type": "arrow",
         "x": x, "y": y, "width": abs(dx), "height": abs(dy),
@@ -163,7 +170,14 @@ def diamond(x, y, w, h, fill="transparent", stroke="#1e1e1e", sw=2, roughness=1,
         "updated": ts(), "link": None, "locked": False
     }
 
-def line(x, y, dx, dy, stroke="#1e1e1e", sw=2, roughness=1):
+def line(x, y, dx=0, dy=0, *, x2=None, y2=None, stroke="#1e1e1e", sw=2, roughness=1):
+    """创建线段。支持两种模式：
+    - 相对偏移: line(x, y, dx, dy)
+    - 绝对坐标: line(x, y, x2=end_x, y2=end_y)
+    """
+    if x2 is not None or y2 is not None:
+        dx = (x2 if x2 is not None else x) - x
+        dy = (y2 if y2 is not None else y) - y
     return {
         "id": uid(), "type": "line",
         "x": x, "y": y, "width": abs(dx), "height": abs(dy),
@@ -296,7 +310,7 @@ def image_embed(x, y, w, h, base64_data, mime="image/png"):
 
 
 def bind_arrow(arrow_el, start_el, end_el, gap=2):
-    """绑定箭头到起止元素，返回新箭头（不修改原始）。"""
+    """绑定箭头到起止元素，同时更新双向引用。就地修改 start_el/end_el。"""
     new_arrow = dict(arrow_el)
     new_arrow["startBinding"] = {
         "elementId": start_el["id"],
@@ -310,7 +324,29 @@ def bind_arrow(arrow_el, start_el, end_el, gap=2):
         "gap": gap,
         "fixedPoint": None
     }
+    # 在目标元素上添加反向引用
+    ref = {"id": arrow_el["id"], "type": "arrow"}
+    for el in (start_el, end_el):
+        bound = el.get("boundElements") or []
+        if not any(b.get("id") == arrow_el["id"] for b in bound):
+            bound.append(ref)
+        el["boundElements"] = bound
     return new_arrow
+
+
+def connect(start_el, end_el, stroke="#1e1e1e", sw=2, roughness=1, gap=8):
+    """创建绑定箭头连接两个元素。自动计算坐标、偏移、双向引用。
+
+    返回绑定好的箭头 dict。同时就地更新 start_el/end_el 的 boundElements。
+    """
+    sx = start_el["x"] + start_el["width"]
+    sy = start_el["y"] + start_el["height"] / 2
+    ex = end_el["x"]
+    ey = end_el["y"] + end_el["height"] / 2
+    dx = ex - sx
+    dy = ey - sy
+    raw = arrow(sx, sy, dx, dy, stroke=stroke, sw=sw, roughness=roughness)
+    return bind_arrow(raw, start_el, end_el, gap=gap)
 
 
 # ---------------------------------------------------------------------------
@@ -329,6 +365,33 @@ def above(y: float, gap: float = 10) -> float:
     return y - gap
 
 
+def bounds(elements: list) -> tuple:
+    """Measure the actual bounding box of a list of elements.
+
+    Returns (min_x, min_y, max_x, max_y) where max_* are the bottom/right edges.
+    Returns (0, 0, 0, 0) for empty lists.
+    """
+    if not elements:
+        return (0, 0, 0, 0)
+    min_x = float("inf")
+    min_y = float("inf")
+    max_x = float("-inf")
+    max_y = float("-inf")
+    for e in elements:
+        if isinstance(e, dict):
+            ex = e.get("x", 0)
+            ey = e.get("y", 0)
+            ew = e.get("width", 0)
+            eh = e.get("height", 0)
+            min_x = min(min_x, ex)
+            min_y = min(min_y, ey)
+            max_x = max(max_x, ex + ew)
+            max_y = max(max_y, ey + eh)
+    if min_x == float("inf"):
+        return (0, 0, 0, 0)
+    return (min_x, min_y, max_x, max_y)
+
+
 def numbered_circle(cx, cy, num, fill, stroke):
     r = 16
     return [
@@ -342,7 +405,7 @@ def numbered_circle(cx, cy, num, fill, stroke):
 def _build_scene(elements, bg="#ffffff", files=None):
     return {
         "type": "excalidraw", "version": 2,
-        "source": "https://excalidraw.com",
+        "source": "https://github.com/zsviczian/obsidian-excalidraw-plugin/releases/tag/2.22.0",
         "elements": elements,
         "appState": {"viewBackgroundColor": bg, "gridSize": None},
         "files": files or {}
@@ -369,3 +432,14 @@ def save_obsidian_md(filepath, elements, bg="#ffffff", files=None):
         json.dump(scene, f, ensure_ascii=False)
         f.write("\n```\n%%\n")
     print(f"  ✓ {os.path.basename(filepath)} ({len(elements)} elements)")
+
+
+def save(filepath, elements, bg="#ffffff", files=None):
+    """自动根据扩展名选择格式保存。
+    - .excalidraw.md → Obsidian 格式 (save_obsidian_md)
+    - .excalidraw     → 纯 JSON 格式 (save_excalidraw)
+    """
+    if filepath.endswith(".excalidraw.md"):
+        save_obsidian_md(filepath, elements, bg, files)
+    else:
+        save_excalidraw(filepath, elements, bg, files)

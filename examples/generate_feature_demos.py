@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.engine import (
     rect, labeled_rect, labeled_diamond, labeled_ellipse,
     arrow, line, text_standalone, group, frame, bind_arrow,
-    ellipse, save_excalidraw, connect,
+    ellipse, save_excalidraw, connect, below, bounds,
 )
 from core.charts import bar_chart, horizontal_bar_chart, line_chart, pie_chart
 from core.icons import icon, list_icons
@@ -28,11 +28,15 @@ def flatten(*args):
 # 1. Charts Demo
 # ---------------------------------------------------------------------------
 def demo_charts():
-    """4 charts in a 2x2 layout."""
+    """4 charts in a 2x2 layout — uses bounds() to measure actual chart sizes."""
+    GAP = 30  # gap between sections
     title = text_standalone(500, 30, "Charts — bar_chart, h_bar, line, pie", fs=26, color="#1e1e1e")
 
-    # --- Top-left: bar_chart ---
+    # --- Section labels for top row ---
     section_tl = text_standalone(200, 80, "bar_chart()", fs=16, color="#868e96")
+    section_tr = text_standalone(640, 80, "horizontal_bar_chart()", fs=16, color="#868e96")
+
+    # --- Top-left: bar_chart ---
     chart_tl = bar_chart(
         x=30, y=110,
         data={"React": 85, "Vue": 72, "Angular": 58, "Svelte": 45, "Solid": 38},
@@ -55,9 +59,8 @@ def demo_charts():
     )
 
     # --- Top-right: horizontal_bar_chart ---
-    section_tr = text_standalone(640, 80, "horizontal_bar_chart()", fs=16, color="#868e96")
     chart_tr = horizontal_bar_chart(
-        x=540, y=120,
+        x=540, y=110,
         data={"Python": 90, "JavaScript": 85, "TypeScript": 75, "Rust": 60, "Go": 55},
         title="Language Usage",
         bar_color="#a5d8ff",
@@ -76,10 +79,42 @@ def demo_charts():
         roughness=1,
     )
 
+    # --- Measure actual bottom of top row charts ---
+    tl_b = bounds(chart_tl)
+    tr_b = bounds(chart_tr)
+    top_row_bottom = max(tl_b[3], tr_b[3])
+
+    # --- Measure bottom charts at origin to find their title overhead ---
+    probe_bl = line_chart(
+        x=0, y=0,
+        data={"Revenue": [30, 45, 42, 60, 55, 80], "Cost": [20, 25, 30, 28, 35, 40]},
+        labels=["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+        title="Revenue vs Cost",
+        series_colors={"Revenue": "#1971c2", "Cost": "#e8590c"},
+        chart_width=400, chart_height=200, fs=12,
+        show_grid=True, show_points=True, roughness=1,
+    )
+    probe_br = pie_chart(
+        x=0, y=0,
+        data={"Direct": 35, "Organic": 30, "Referral": 20, "Social": 15},
+        title="Traffic Sources",
+        show_percentages=True, roughness=1,
+    )
+    # Chart titles extend ABOVE y=0, so min_y is negative
+    bl_overhead = max(0, -bounds(probe_bl)[1])
+    br_overhead = max(0, -bounds(probe_br)[1])
+    max_overhead = max(bl_overhead, br_overhead)
+
+    # --- Position bottom row safely ---
+    section_y = top_row_bottom + GAP
+    chart_y = section_y + 20 + GAP + max_overhead  # 20 = section label height
+
+    section_bl = text_standalone(240, section_y, "line_chart()", fs=16, color="#868e96")
+    section_br = text_standalone(740, section_y, "pie_chart()", fs=16, color="#868e96")
+
     # --- Bottom-left: line_chart ---
-    section_bl = text_standalone(240, 450, "line_chart()", fs=16, color="#868e96")
     chart_bl = line_chart(
-        x=30, y=490,
+        x=30, y=chart_y,
         data={
             "Revenue": [30, 45, 42, 60, 55, 80],
             "Cost": [20, 25, 30, 28, 35, 40],
@@ -96,9 +131,8 @@ def demo_charts():
     )
 
     # --- Bottom-right: pie_chart ---
-    section_br = text_standalone(740, 450, "pie_chart()", fs=16, color="#868e96")
     chart_br = pie_chart(
-        x=580, y=490,
+        x=580, y=chart_y,
         data={"Direct": 35, "Organic": 30, "Referral": 20, "Social": 15},
         title="Traffic Sources",
         show_percentages=True,
@@ -186,7 +220,8 @@ def demo_icons():
 
     cols = 5
     icon_scale = 0.8
-    icon_size = 48 * icon_scale
+    max_icon_h = 56 * icon_scale   # tallest icons (database, transformer-block)
+    icon_w = 48 * icon_scale
     cell_w = 130
     cell_h = 90
     start_x = 40
@@ -201,13 +236,13 @@ def demo_icons():
         cy = start_y + row * cell_h
 
         # Icon at center of cell
-        icon_els = icon(name, cx + cell_w / 2 - icon_size / 2, cy,
+        icon_els = icon(name, cx + cell_w / 2 - icon_w / 2, cy,
                         stroke="#495057", scale=icon_scale)
         elements_list.extend(icon_els)
 
-        # Label below icon
+        # Label below icon — use below() to avoid overlap
         label = text_standalone(
-            cx + cell_w / 2, cy + icon_size + 14,
+            cx + cell_w / 2, below(cy, max_icon_h, gap=8),
             name, fs=10, color="#868e96",
         )
         elements_list.append(label)
@@ -228,17 +263,17 @@ def demo_svg():
     # Rectangle from SVG
     svg_rect = '<svg viewBox="0 0 100 80"><rect x="10" y="10" width="80" height="60" fill="#a5d8ff" stroke="#1971c2"/></svg>'
     rect_els = svg_to_elements(svg_rect, x=30, y=120, scale=1.0, stroke="#1971c2")
-    rect_label = text_standalone(70, 230, "SVG <rect>", fs=12, color="#868e96")
+    rect_label = text_standalone(70, below(120, 80, 12), "SVG <rect>", fs=12, color="#868e96")
 
     # Circle from SVG
     svg_circle = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#b2f2bb" stroke="#2f9e44"/></svg>'
     circle_els = svg_to_elements(svg_circle, x=180, y=120, scale=1.0, stroke="#2f9e44")
-    circle_label = text_standalone(220, 250, "SVG <circle>", fs=12, color="#868e96")
+    circle_label = text_standalone(220, below(120, 100, 12), "SVG <circle>", fs=12, color="#868e96")
 
     # Triangle from SVG path
     svg_tri = '<svg viewBox="0 0 100 100"><path d="M50 10 L90 90 L10 90 Z" fill="#ffd8a8" stroke="#e8590c"/></svg>'
     tri_els = svg_to_elements(svg_tri, x=320, y=120, scale=1.0, stroke="#e8590c")
-    tri_label = text_standalone(360, 250, "SVG <path>", fs=12, color="#868e96")
+    tri_label = text_standalone(360, below(120, 100, 12), "SVG <path>", fs=12, color="#868e96")
 
     # --- Section 2: Bezier curves ---
     section2 = text_standalone(200, 270, "Bezier curves → polyline elements", fs=14, color="#868e96")
@@ -309,12 +344,15 @@ def demo_icon_library():
     a3 = arrow(500, 365, 40, 0, stroke="#495057")
     a4 = arrow(670, 365, 40, 0, stroke="#495057")
 
+    pipeline_y = 340
+    pipeline_h = 50
+    label_y = below(pipeline_y, pipeline_h, gap=18)
     code_labels = [
-        text_standalone(95, 405, "svg_to_elements()", fs=10, color="#868e96"),
-        text_standalone(265, 405, "save_icon()", fs=10, color="#868e96"),
-        text_standalone(435, 405, "find_icons()", fs=10, color="#868e96"),
-        text_standalone(605, 405, "load_icon()", fs=10, color="#868e96"),
-        text_standalone(775, 405, "Elements!", fs=10, color="#868e96"),
+        text_standalone(95, label_y, "svg_to_elements()", fs=10, color="#868e96"),
+        text_standalone(265, label_y, "save_icon()", fs=10, color="#868e96"),
+        text_standalone(435, label_y, "find_icons()", fs=10, color="#868e96"),
+        text_standalone(605, label_y, "load_icon()", fs=10, color="#868e96"),
+        text_standalone(775, label_y, "Elements!", fs=10, color="#868e96"),
     ]
 
     elements = flatten(

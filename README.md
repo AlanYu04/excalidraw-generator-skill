@@ -6,6 +6,23 @@
 
 (* AI icon generation requires a Gemini API key; YAML styles require PyYAML)
 
+### How It Works
+
+![Workflow](docs/images/workflow.png)
+
+### Gallery
+
+| Architecture | Charts | Icons |
+|:---:|:---:|:---:|
+| ![Architecture](docs/images/architecture.png) | ![Bar Chart](docs/images/bar-chart.png) | ![Icons](docs/images/icons.png) |
+| ![Line Chart](docs/images/line-chart.png) | ![Bar Chart 2](docs/images/bar-chart-2.png) | |
+
+### Real-World Cases
+
+| Sensor Data Pipeline | Decision Transformer | OpenClaw Architecture |
+|:---:|:---:|:---:|
+| ![Case 1](docs/images/case-sensor.png) | ![Case 2](docs/images/case-decision-transformer.png) | ![Case 3](docs/images/case-openclaw.png) |
+
 ---
 
 ## Features
@@ -20,6 +37,38 @@
 - **Full CJK** (Chinese, Japanese, Korean) text support
 - **Layout helpers** to prevent text/shape overlap
 - **Output** as `.excalidraw` or `.excalidraw.md` (Obsidian)
+
+---
+
+## Prerequisites
+
+### 1. Install Obsidian (Recommended)
+
+[Obsidian](https://obsidian.md) is a free note-taking app with native Excalidraw support.
+
+1. Download from https://obsidian.md/download
+2. Create or open a Vault
+
+### 2. Install Excalidraw Plugin
+
+1. Open Obsidian → Settings → Community Plugins
+2. Turn off Safe Mode (if still on)
+3. Click Browse → search "Excalidraw"
+4. Install **Excalidraw** by Zsolt Viczián
+5. Enable the plugin
+
+### 3. View Generated Diagrams
+
+- Place `.excalidraw` files in your Vault directory
+- Click to open and edit in Obsidian
+- Or open at https://excalidraw.com
+
+### Without Obsidian
+
+`.excalidraw` files are standard JSON. You can also use:
+- [excalidraw.com](https://excalidraw.com) — online editor
+- VS Code Excalidraw extension
+- Any tool that supports the Excalidraw format
 
 ---
 
@@ -384,6 +433,8 @@ The `save()` function auto-detects the format from the file extension.
 excalidraw-generator/
 ├── SKILL.md                    # Claude Code skill entry point
 ├── README.md
+├── docs/
+│   └── images/                 # Screenshots & demo gallery
 ├── core/
 │   ├── __init__.py
 │   ├── engine.py               # Element builders, layout helpers, output

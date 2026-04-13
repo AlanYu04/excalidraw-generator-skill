@@ -47,3 +47,39 @@ def test_icon_stroke_color():
     for el in els:
         if "strokeColor" in el:
             assert el["strokeColor"] == "#ff0000"
+
+
+ML_ICONS = [
+    "transformer-block", "attention-head", "embedding-layer", "feedforward",
+    "encoder", "decoder", "loss-function", "optimizer",
+    "gpu", "robot", "brain", "neural-net",
+    "cube", "data-pipeline", "matrix",
+]
+
+
+def test_list_icons_includes_ml_icons():
+    names = list_icons()
+    assert len(names) >= 25  # 10 original + 15 ML
+    for name in ML_ICONS:
+        assert name in names, f"Missing ML icon: {name}"
+
+
+def test_ml_icons_return_elements():
+    for name in ML_ICONS:
+        els = icon(name, x=50, y=50)
+        assert isinstance(els, list), f"{name} should return list"
+        assert len(els) >= 1, f"{name} should have at least 1 element"
+        for el in els:
+            assert "type" in el, f"{name} element missing 'type'"
+            assert "id" in el, f"{name} element missing 'id'"
+
+
+def test_ml_icons_respect_scale():
+    for name in ML_ICONS:
+        els_1x = icon(name, x=0, y=0, scale=1.0)
+        els_2x = icon(name, x=0, y=0, scale=2.0)
+        # At least one element should be larger at 2x
+        widths_1x = [el.get("width", 0) for el in els_1x if "width" in el]
+        widths_2x = [el.get("width", 0) for el in els_2x if "width" in el]
+        if widths_1x and widths_2x:
+            assert max(widths_2x) > max(widths_1x), f"{name} scale not working"

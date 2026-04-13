@@ -618,6 +618,92 @@ def _parse_color(value: Optional[str]) -> str:
     return "#1e1e1e"
 
 
+def _compose_opacity(
+    *values: Optional[float],
+) -> float:
+    """Compose multiple opacity values by multiplication. None values are treated as 1.0."""
+    result = 1.0
+    for v in values:
+        if v is not None:
+            result *= max(0.0, min(1.0, v))
+    return result
+
+
+def _detect_ring_shape(
+    polylines: List[List[Tuple[float, float]]],
+) -> bool:
+    """Detect if polylines represent a ring/donut (outer shape with inner hole)."""
+    if len(polylines) != 2:
+        return False
+
+    bb0 = _bounding_box(polylines[0])
+    bb1 = _bounding_box(polylines[1])
+    area0 = (bb0[2] - bb0[0]) * (bb0[3] - bb0[1])
+    area1 = (bb1[2] - bb1[0]) * (bb1[3] - bb1[1])
+
+    if area0 > area1:
+        outer_bb, inner_bb = bb0, bb1
+        outer_area, inner_area = area0, area1
+    else:
+        outer_bb, inner_bb = bb1, bb0
+        outer_area, inner_area = area1, area0
+
+    margin = 2.0
+    if (inner_bb[0] < outer_bb[0] - margin or inner_bb[1] < outer_bb[1] - margin or
+            inner_bb[2] > outer_bb[2] + margin or inner_bb[3] > outer_bb[3] + margin):
+        return False
+
+    if outer_area <= 0:
+        return False
+    ratio = inner_area / outer_area
+    if ratio < 0.2 or ratio > 0.8:
+        return False
+
+    oc = ((outer_bb[0] + outer_bb[2]) / 2, (outer_bb[1] + outer_bb[3]) / 2)
+    ic = ((inner_bb[0] + inner_bb[2]) / 2, (inner_bb[1] + inner_bb[3]) / 2)
+    ow = outer_bb[2] - outer_bb[0]
+    oh = outer_bb[3] - outer_bb[1]
+    if abs(oc[0] - ic[0]) > ow * 0.2 or abs(oc[1] - ic[1]) > oh * 0.2:
+        return False
+
+    return True
+
+
+def _resolve_gradient_color(
+    root: ET.Element,
+    fill_value: str,
+) -> str:
+    """Resolve a url(#id) fill reference to a concrete color."""
+    if not fill_value or not fill_value.startswith("url("):
+        return _parse_color(fill_value)
+
+    ref_match = re.match(r"url\(#([^)]+)\)", fill_value)
+    if not ref_match:
+        return "transparent"
+    ref_id = ref_match.group(1)
+
+    ns = "http://www.w3.org/2000/svg"
+    for defs in root.iter("{%s}defs" % ns):
+        for child in defs:
+            if child.get("id") == ref_id:
+                for stop in child.iter("{%s}stop" % ns):
+                    color = stop.get("stop-color") or ""
+                    style = stop.get("style", "")
+                    if not color and "stop-color" in style:
+                        for part in style.split(";"):
+                            if "stop-color" in part:
+                                color = part.split(":", 1)[1].strip()
+                    opacity_str = stop.get("stop-opacity")
+                    opacity = float(opacity_str) if opacity_str else 1.0
+                    if color and opacity > 0:
+                        return _parse_color(color)
+                for stop in child.iter("{%s}stop" % ns):
+                    color = stop.get("stop-color")
+                    if color:
+                        return _parse_color(color)
+    return "transparent"
+
+
 def _extract_paths(
     root: ET.Element,
     transform: Optional[str] = None,
@@ -890,7 +976,11 @@ def _convert_path_to_elements(
     """Convert a single SVG path into Excalidraw elements."""
     d = path_info["d"]
     stroke = _parse_color(path_info.get("stroke")) or default_stroke
-    fill = _parse_color(path_info.get("fill"))
+    raw_fill = path_info.get("fill", "")
+    if raw_fill and raw_fill.startswith("url(") and path_info.get("_root") is not None:
+        fill = _resolve_gradient_color(path_info["_root"], raw_fill)
+    else:
+        fill = _parse_color(raw_fill)
     sw_str = path_info.get("stroke_width")
     sw = int(float(sw_str)) if sw_str else default_sw
 
@@ -1016,6 +1106,7 @@ def svg_to_elements(
     all_elements: List[Dict[str, Any]] = []
 
     for path_info in paths:
+        path_info["_root"] = root  # for gradient resolution
         els = _convert_path_to_elements(
             path_info, x, y, scale, stroke, stroke_width, roughness
         )
