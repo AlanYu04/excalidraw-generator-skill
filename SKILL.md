@@ -1,6 +1,6 @@
 ---
 name: excalidraw-generator
-description: Generate Excalidraw diagrams via Python. Use when user wants to draw diagrams, flowcharts, architecture diagrams, system diagrams, comparison tables, timelines, or any visual illustration. Supports 3 style presets (Vivid/Clean/Sketch) + custom user styles. Outputs .excalidraw or .excalidraw.md for Obsidian.
+description: Generate Excalidraw diagrams via Python. Use when user wants to draw diagrams, flowcharts, architecture diagrams, system diagrams, comparison tables, timelines, bar charts, or any visual illustration. Supports 3 style presets (Vivid/Clean/Sketch) + custom user styles. Outputs .excalidraw or .excalidraw.md for Obsidian. Includes SVG-to-Excalidraw converter, hand-drawn bar charts, persistent icon library with vector search.
 ---
 
 # Excalidraw Diagram Generator
@@ -12,10 +12,55 @@ Generate high-quality Excalidraw diagrams via Python script execution.
 - User asks to "draw", "generate diagram", "create flowchart", "make architecture diagram"
 - User wants visual illustrations for papers, slides, or documentation
 - User mentions "excalidraw" or asks for diagram generation
+- User wants bar charts, data visualizations, or comparison tables
+- User wants to convert SVG icons to Excalidraw elements
+- User wants to save and reuse custom icons
+
+## Step 0: Brainstorm
+
+BEFORE asking any configuration questions, help the user clarify what they want to draw.
+
+Ask these three questions **together in a single message**. Skip any question the user's original request already answers.
+
+### Q1. What diagram do you want?
+
+> "What diagram do you want? Describe your scenario and purpose."
+
+Understand the domain, audience, and intent. Example: "K8s microservice architecture, for onboarding new engineers."
+
+### Q2. Any reference files or data?
+
+> "Any reference files or data? Provide file paths, or say 'none'."
+
+If the user provides file paths, **read the files** before proposing a plan. Supported: CSV, JSON, images (PNG/JPG), existing `.excalidraw` files, screenshots, whiteboard photos.
+
+### Q3. What key information and relationships?
+
+> "What key information and relationships should the diagram show?"
+
+Identify core elements, hierarchy, and connections. Example: "Pod → Service → Ingress three layers, plus monitoring sidecar."
+
+### Propose a Plan
+
+After collecting answers (and reading any files), output a structured diagram plan:
+
+```
+## Diagram Plan
+
+**Type**: [flowchart / architecture / comparison table / timeline / bar chart / ...]
+**Content**: [list main elements to include]
+**Structure**: [hierarchy, groups, relationships between elements]
+**Layout**: [top-down / left-right / radial / grid — brief description]
+**Data**: [how provided data/files integrate into the diagram, or "none"]
+
+Confirm this plan? Or tell me what to adjust.
+```
+
+Only proceed to Step 1 once the user confirms the plan.
 
 ## HARD GATE
 
-You MUST ask the user the following configuration questions BEFORE generating any code. Do NOT skip these.
+You MUST complete Step 0 (Brainstorm) and get user confirmation BEFORE asking the configuration questions below. Do NOT skip brainstorm.
 
 ## Step 1: Configuration Questions
 
@@ -120,16 +165,41 @@ These Python functions are available for diagram generation. Import them from th
 # Element builders
 rect(x, y, w, h, fill, stroke, sw)
 labeled_rect(x, y, w, h, label, fill, stroke, sw, fs)  # rect + auto-centered text via containerId
+labeled_diamond(x, y, w, h, label, fill, stroke, sw)    # diamond decision node with text
+labeled_ellipse(x, y, w, h, label, fill, stroke, sw)    # ellipse/circle with text
 text_standalone(cx, cy, txt, fs, color)                   # standalone centered text
 arrow(x, y, dx, dy, stroke, sw)                           # arrow with arrowhead
 ellipse(x, y, w, h, fill, stroke, sw)                     # circle/ellipse
 diamond(x, y, w, h, fill, stroke, sw)                     # diamond shape
 line(x, y, dx, dy, stroke, sw)                             # line segment
+group(elements)                                            # group elements (shared groupIds)
+frame(x, y, w, h, name)                                   # frame / named region
+image_embed(x, y, w, h, base64_data, mime)                # embedded image
+bind_arrow(arrow_el, start_el, end_el, gap)               # bind arrow to elements
 numbered_circle(cx, cy, num, fill, stroke)                # numbered badge
 
+# Icon library (10 built-in icons)
+icon(name, x, y, scale, stroke, sw, roughness)            # built-in icon
+list_icons()                                               # list all available icons
+
+# SVG converter
+svg_to_elements(svg_string, x, y, scale, stroke, sw, roughness)    # SVG string → Excalidraw
+svg_file_to_elements(filepath, x, y, scale, stroke, sw, roughness) # SVG file → Excalidraw
+
+# Charts
+bar_chart(x, y, data, title, bar_color, ...)              # vertical bar chart
+horizontal_bar_chart(x, y, data, title, bar_color, ...)   # horizontal bar chart
+
+# Icon library (persistent, searchable)
+save_icon(name, elements, description, tags, source)       # save to library
+load_icon(name, x, y, scale)                               # load from library
+delete_icon(name)                                          # delete from library
+list_library_icons()                                       # list all library icons
+find_icons(query, limit, use_embeddings)                   # search by description
+
 # Output
-save_excalidraw(filepath, elements)          # save as .excalidraw JSON
-save_obsidian_md(filepath, elements)         # save as .excalidraw.md
+save_excalidraw(filepath, elements, bg, files)  # save as .excalidraw JSON
+save_obsidian_md(filepath, elements, bg, files) # save as .excalidraw.md
 ```
 
 ### Text Centering
@@ -159,14 +229,58 @@ for row_data in rows:
     y += row_h + gap
 ```
 
-### Closed Loop
+### Decision Flow (vertical)
 ```python
-# 4-5 nodes in a rectangle, arrows connecting clockwise
+from core.engine import labeled_ellipse, labeled_diamond, labeled_rect, arrow, bind_arrow
+
+start = labeled_ellipse(x, y, 100, 50, "Start", fill="#d0f0c0")
+step1 = labeled_rect(x, y + 100, 200, 60, "Input")
+dec   = labeled_diamond(x, y + 200, 160, 100, "Valid?")
+yes   = labeled_rect(x, y + 340, 200, 60, "Success", fill="#d0f0c0")
+no    = labeled_rect(x + 240, y + 220, 160, 60, "Error", fill="#ffc9c9")
+
+a1 = bind_arrow(arrow(x+50, y+50, 0, 50), start[0], step1[0])
+a2 = bind_arrow(arrow(x+100, y+160, 0, 40), step1[0], dec[0])
+a3 = bind_arrow(arrow(x+80, y+300, 0, 40), dec[0], yes[0])
+a4 = bind_arrow(arrow(x+160, y+250, 80, 0), dec[0], no[0])
+elements = [*start, *step1, *dec, *yes, *no, a1, a2, a3, a4]
 ```
 
-### Timeline
+### Bar Chart
 ```python
-# Horizontal line + milestone cards above + reference labels below
+from core.charts import bar_chart
+
+elements = bar_chart(
+    x=50, y=100,
+    data={"React": 85, "Vue": 72, "Angular": 58, "Svelte": 45},
+    title="Framework Popularity",
+    bar_color="#a5d8ff",
+    show_values=True,
+    roughness=1,
+)
+```
+
+### SVG Icon Conversion
+```python
+from core.svg_converter import svg_to_elements
+
+svg = '<svg viewBox="0 0 24 24"><path d="M12 2L2 22h20Z"/></svg>'
+elements = svg_to_elements(svg, x=100, y=50, scale=1.0, stroke="#1e1e1e")
+```
+
+### Icon Library Workflow
+```python
+from core.icon_library import save_icon, load_icon, find_icons
+
+# Save custom icon with description
+save_icon("my-server", elements, description="Server rack with LEDs", tags=["server", "hardware"])
+
+# Search for icon by description
+results = find_icons("server hardware infrastructure")
+best = results[0]
+
+# Load and place the icon
+server_elements = load_icon(best["name"], x=200, y=100, scale=1.0)
 ```
 
 ## Custom Style YAML Format
@@ -200,6 +314,54 @@ layout:
 
 - Skill directory: `~/.claude/skills/excalidraw-generator/`
 - Core engine: `~/.claude/skills/excalidraw-generator/core/`
+- Icon library: `~/.claude/skills/excalidraw-generator/core/icons.py`
+- SVG converter: `~/.claude/skills/excalidraw-generator/core/svg_converter.py`
+- Chart builder: `~/.claude/skills/excalidraw-generator/core/charts.py`
+- Persistent icon library: `~/.claude/skills/excalidraw-generator/core/icon_library.py`
 - Style presets: `~/.claude/skills/excalidraw-generator/styles/`
 - Prompt guidelines: `~/.claude/skills/excalidraw-generator/prompts/`
 - Custom user styles: `~/.excalidraw-gen/styles/`
+- User icon library: `~/.excalidraw-gen/icons/`
+
+## Icon Library
+
+Use `icon(name, x, y, scale, stroke, sw, roughness)` to place built-in icons. Available icons:
+
+| Icon | Name | Description |
+|------|------|-------------|
+| Database cylinder | `database` | Data storage, DB instances |
+| Person silhouette | `user` | Users, actors, personas |
+| Cloud shape | `cloud` | Cloud services, internet |
+| Server rack | `server` | Servers, hosting |
+| Gear/cog | `gear` | Settings, configuration |
+| Document | `document` | Files, documents, pages |
+| Shield | `shield` | Security, protection |
+| Right arrow | `arrow-right` | Direction, flow |
+| Checkmark | `check` | Approval, completion |
+| Warning triangle | `warning` | Alerts, caution |
+
+## SVG-to-Excalidraw Converter
+
+Convert any SVG to Excalidraw elements. Supports:
+- **Path commands**: M, L, H, V, C, S, Q, T, A, Z (absolute & relative)
+- **SVG elements**: `<path>`, `<rect>`, `<circle>`, `<ellipse>`, `<line>`, `<polygon>`, `<polyline>`
+- **Shape classification**: Circles → `ellipse`, rectangles → `rectangle`, curves → `line`
+- **Bezier tessellation**: Cubic, quadratic, and arc curves sampled to polylines
+- **RDP simplification**: Reduces point count while preserving visual fidelity
+
+## Bar Charts
+
+Hand-drawn style bar charts built from Excalidraw primitives:
+- **Vertical** (`bar_chart`): Bars going up from x-axis
+- **Horizontal** (`horizontal_bar_chart`): Bars extending right from y-axis
+- Supports custom colors per bar, value labels, grid lines, CJK text
+- `bar_colors` parameter for per-category color overrides
+
+## Persistent Icon Library & Search
+
+Save custom icons to `~/.excalidraw-gen/icons/` for reuse across diagrams:
+
+- **save_icon**: Save elements with description and tags
+- **load_icon**: Load and reposition with fresh IDs
+- **find_icons**: TF-IDF vector search (zero-dependency, works offline)
+- **Optional embedding search**: Set `OPENAI_API_KEY` for semantic search via OpenAI

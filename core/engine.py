@@ -93,9 +93,12 @@ def labeled_rect(x, y, w, h, label, fill="transparent", stroke="#1e1e1e",
         "boundElements": [{"id": tid, "type": "text"}],
         "updated": ts(), "link": None, "locked": False
     }
+    # Bound text: align to container inner area, let Excalidraw auto-center
+    pad = 4
     t = {
         "id": tid, "type": "text",
-        "x": x + 4, "y": y + 4, "width": w - 8, "height": h - 8,
+        "x": x + pad, "y": y + pad,
+        "width": w - pad * 2, "height": h - pad * 2,
         "angle": 0, "strokeColor": label_color, "backgroundColor": "transparent",
         "fillStyle": "solid", "strokeWidth": 2, "strokeStyle": "solid",
         "roughness": 0, "opacity": 100, "groupIds": [],
@@ -162,6 +165,142 @@ def line(x, y, dx, dy, stroke="#1e1e1e", sw=2, roughness=1):
         "startArrowhead": None, "endArrowhead": None, "elbowed": False
     }
 
+def labeled_diamond(x, y, w, h, label, fill="transparent", stroke="#1e1e1e",
+                    sw=2, fs=16, label_color=None, roughness=1, font_family=3,
+                    fill_style="solid"):
+    if label_color is None: label_color = stroke
+    did, tid = uid(), uid()
+    d = {
+        "id": did, "type": "diamond",
+        "x": x, "y": y, "width": w, "height": h,
+        "angle": 0, "strokeColor": stroke, "backgroundColor": fill,
+        "fillStyle": fill_style, "strokeWidth": sw, "strokeStyle": "solid",
+        "roughness": roughness, "opacity": 100, "groupIds": [],
+        "roundness": {"type": 2}, "seed": sd(), "version": 1,
+        "versionNonce": sd(), "isDeleted": False,
+        "boundElements": [{"id": tid, "type": "text"}],
+        "updated": ts(), "link": None, "locked": False
+    }
+    pad = 4
+    t = {
+        "id": tid, "type": "text",
+        "x": x + pad, "y": y + pad,
+        "width": w - pad * 2, "height": h - pad * 2,
+        "angle": 0, "strokeColor": label_color, "backgroundColor": "transparent",
+        "fillStyle": "solid", "strokeWidth": 2, "strokeStyle": "solid",
+        "roughness": 0, "opacity": 100, "groupIds": [],
+        "roundness": None, "seed": sd(), "version": 1,
+        "versionNonce": sd(), "isDeleted": False, "boundElements": [],
+        "updated": ts(), "link": None, "locked": False,
+        "text": label, "fontSize": fs, "fontFamily": font_family,
+        "textAlign": "center", "verticalAlign": "middle",
+        "containerId": did, "originalText": label, "lineHeight": 1.25
+    }
+    return [d, t]
+
+
+def labeled_ellipse(x, y, w, h, label, fill="transparent", stroke="#1e1e1e",
+                    sw=2, fs=16, label_color=None, roughness=1, font_family=3,
+                    fill_style="solid"):
+    if label_color is None: label_color = stroke
+    eid, tid = uid(), uid()
+    e = {
+        "id": eid, "type": "ellipse",
+        "x": x, "y": y, "width": w, "height": h,
+        "angle": 0, "strokeColor": stroke, "backgroundColor": fill,
+        "fillStyle": fill_style, "strokeWidth": sw, "strokeStyle": "solid",
+        "roughness": roughness, "opacity": 100, "groupIds": [],
+        "roundness": {"type": 2}, "seed": sd(), "version": 1,
+        "versionNonce": sd(), "isDeleted": False,
+        "boundElements": [{"id": tid, "type": "text"}],
+        "updated": ts(), "link": None, "locked": False
+    }
+    pad = 4
+    t = {
+        "id": tid, "type": "text",
+        "x": x + pad, "y": y + pad,
+        "width": w - pad * 2, "height": h - pad * 2,
+        "angle": 0, "strokeColor": label_color, "backgroundColor": "transparent",
+        "fillStyle": "solid", "strokeWidth": 2, "strokeStyle": "solid",
+        "roughness": 0, "opacity": 100, "groupIds": [],
+        "roundness": None, "seed": sd(), "version": 1,
+        "versionNonce": sd(), "isDeleted": False, "boundElements": [],
+        "updated": ts(), "link": None, "locked": False,
+        "text": label, "fontSize": fs, "fontFamily": font_family,
+        "textAlign": "center", "verticalAlign": "middle",
+        "containerId": eid, "originalText": label, "lineHeight": 1.25
+    }
+    return [e, t]
+
+
+def group(elements):
+    """将元素编组，返回新元素列表（不修改原始元素）。"""
+    gid = uid()
+    result = []
+    for el in elements:
+        new_el = dict(el)
+        new_el["groupIds"] = list(el.get("groupIds", [])) + [gid]
+        result.append(new_el)
+    return result
+
+
+def frame(x, y, w, h, name="Frame", stroke="#1e1e1e", sw=2):
+    return {
+        "id": uid(), "type": "frame",
+        "x": x, "y": y, "width": w, "height": h,
+        "angle": 0, "strokeColor": stroke, "backgroundColor": "transparent",
+        "fillStyle": "solid", "strokeWidth": sw, "strokeStyle": "solid",
+        "roughness": 0, "opacity": 100, "groupIds": [],
+        "roundness": None, "seed": sd(), "version": 1,
+        "versionNonce": sd(), "isDeleted": False, "boundElements": [],
+        "updated": ts(), "link": None, "locked": False,
+        "name": name
+    }
+
+
+def image_embed(x, y, w, h, base64_data, mime="image/png"):
+    """创建图片元素和对应的 files 条目。返回 (element_dict, files_dict)。"""
+    file_id = uid()
+    el = {
+        "id": uid(), "type": "image",
+        "x": x, "y": y, "width": w, "height": h,
+        "angle": 0, "strokeColor": "transparent", "backgroundColor": "transparent",
+        "fillStyle": "solid", "strokeWidth": 0, "strokeStyle": "solid",
+        "roughness": 0, "opacity": 100, "groupIds": [],
+        "roundness": None, "seed": sd(), "version": 1,
+        "versionNonce": sd(), "isDeleted": False, "boundElements": [],
+        "updated": ts(), "link": None, "locked": False,
+        "fileId": file_id, "status": "saved", "scale": [1, 1]
+    }
+    file_entry = {
+        file_id: {
+            "mimeType": mime,
+            "id": file_id,
+            "dataURL": f"data:{mime};base64,{base64_data}",
+            "created": ts()
+        }
+    }
+    return el, file_entry
+
+
+def bind_arrow(arrow_el, start_el, end_el, gap=2):
+    """绑定箭头到起止元素，返回新箭头（不修改原始）。"""
+    new_arrow = dict(arrow_el)
+    new_arrow["startBinding"] = {
+        "elementId": start_el["id"],
+        "focus": 0,
+        "gap": gap,
+        "fixedPoint": None
+    }
+    new_arrow["endBinding"] = {
+        "elementId": end_el["id"],
+        "focus": 0,
+        "gap": gap,
+        "fixedPoint": None
+    }
+    return new_arrow
+
+
 def numbered_circle(cx, cy, num, fill, stroke):
     r = 16
     return [
@@ -172,23 +311,23 @@ def numbered_circle(cx, cy, num, fill, stroke):
 # ---------------------------------------------------------------------------
 # Output
 # ---------------------------------------------------------------------------
-def _build_scene(elements, bg="#ffffff"):
+def _build_scene(elements, bg="#ffffff", files=None):
     return {
         "type": "excalidraw", "version": 2,
         "source": "https://excalidraw.com",
         "elements": elements,
         "appState": {"viewBackgroundColor": bg, "gridSize": None},
-        "files": {}
+        "files": files or {}
     }
 
-def save_excalidraw(filepath, elements, bg="#ffffff"):
-    scene = _build_scene(elements, bg)
+def save_excalidraw(filepath, elements, bg="#ffffff", files=None):
+    scene = _build_scene(elements, bg, files)
     with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(scene, f, ensure_ascii=False, indent=2)
     print(f"  ✓ {os.path.basename(filepath)} ({len(elements)} elements)")
 
-def save_obsidian_md(filepath, elements, bg="#ffffff"):
-    scene = _build_scene(elements, bg)
+def save_obsidian_md(filepath, elements, bg="#ffffff", files=None):
+    scene = _build_scene(elements, bg, files)
     text_lines = []
     for e in elements:
         if e["type"] == "text":
