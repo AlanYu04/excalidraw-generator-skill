@@ -7,7 +7,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.engine import (
     rect, text_standalone, labeled_rect, labeled_ellipse, arrow, ellipse,
-    line, numbered_circle, save_obsidian_md, save_excalidraw
+    line, numbered_circle, save_obsidian_md, save_excalidraw,
+    below,
 )
 
 OBSIDIAN = "/Users/alan/Library/Mobile Documents/iCloud~md~obsidian/Documents/Excalidraw"
@@ -31,14 +32,16 @@ def diagram_how_it_works():
 
     # ---- Step 1: User Input ----
     y1 = 70
-    els.extend(labeled_ellipse(cx - 80, y1, 160, 45, "User Request", fill=PURPLE_BG, stroke=PURPLE_FG, sw=2, fs=16, label_color=PURPLE_FG))
-    els.append(text_standalone(cx, y1 + 55, '"Draw a pipeline diagram"', fs=11, color=GRAY_FG))
+    ellipse_h = 45
+    els.extend(labeled_ellipse(cx - 80, y1, 160, ellipse_h, "User Request", fill=PURPLE_BG, stroke=PURPLE_FG, sw=2, fs=16, label_color=PURPLE_FG))
+    subtitle_y = below(y1, ellipse_h)
+    els.append(text_standalone(cx, subtitle_y, '"Draw a pipeline diagram"', fs=11, color=GRAY_FG))
 
     # Arrow down
-    els.append(arrow(cx, y1 + 68, 0, 12, stroke=GRAY_FG, sw=2))
+    els.append(arrow(cx, subtitle_y + 13, 0, 12, stroke=GRAY_FG, sw=2))
 
     # ---- Step 2: Config Selection ----
-    y2 = y1 + 85
+    y2 = subtitle_y + 30
     cfg_w = 140
     cfg_h = 50
     cfg_gap = 20

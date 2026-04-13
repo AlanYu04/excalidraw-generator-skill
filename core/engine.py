@@ -301,6 +301,22 @@ def bind_arrow(arrow_el, start_el, end_el, gap=2):
     return new_arrow
 
 
+# ---------------------------------------------------------------------------
+# Layout helpers — prevent text/shape overlap
+# ---------------------------------------------------------------------------
+def below(y: float, h: float, gap: float = 10) -> float:
+    """Safe y-coordinate for placing an element below a shape at (_, y) with height h."""
+    return y + h + gap
+
+def right_of(x: float, w: float, gap: float = 10) -> float:
+    """Safe x-coordinate for placing an element to the right of a shape at (x, _) with width w."""
+    return x + w + gap
+
+def above(y: float, gap: float = 10) -> float:
+    """Safe y-coordinate for placing an element above a shape whose top is at y."""
+    return y - gap
+
+
 def numbered_circle(cx, cy, num, fill, stroke):
     r = 16
     return [
