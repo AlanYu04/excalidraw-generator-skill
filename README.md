@@ -1,23 +1,33 @@
-# Excalidraw Generator
+<div align="center">
 
-> Python-based Excalidraw diagram generator for Claude Code. Generate publication-quality flowcharts, charts, and diagrams with CJK support.
+# ✏️ Excalidraw Generator
 
-**39 Built-in Icons | 4 Chart Types | 3 Style Presets | CJK Support | Zero Dependencies***
+**AI-powered diagram generator for Claude Code**
 
-(* AI icon generation requires a Gemini API key; YAML styles require PyYAML)
+Generate publication-quality flowcharts, architecture diagrams, charts, and more — directly as Excalidraw JSON.
 
-### How It Works
+[![Python 3.9+](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Claude Code Skill](https://img.shields.io/badge/Claude_Code-Skill-blueviolet?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMkw0IDdWMTdMMTIgMjJMMjAgMTdWN0wxMiAyWiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+)](https://github.com/AlanYu04/excalidraw-generator-skill)
+
+`39 Built-in Icons` · `4 Chart Types` · `3 Style Presets` · `CJK Support` · `Zero Dependencies`
+
+</div>
+
+---
+
+### 🔧 How It Works
 
 ![Workflow](docs/images/workflow.png)
 
-### Gallery
+### 🖼️ Gallery
 
 | Architecture | Charts | Icons |
 |:---:|:---:|:---:|
 | ![Architecture](docs/images/architecture.png) | ![Bar Chart](docs/images/bar-chart.png) | ![Icons](docs/images/icons.png) |
 | ![Line Chart](docs/images/line-chart.png) | ![Bar Chart 2](docs/images/bar-chart-2.png) | |
 
-### Real-World Cases
+### 🚀 Real-World Cases
 
 | Sensor Data Pipeline | Decision Transformer | OpenClaw Architecture |
 |:---:|:---:|:---:|
@@ -25,18 +35,22 @@
 
 ---
 
-## Features
+## ✨ Features
 
-- **Element builders** -- rectangles, ellipses, diamonds, arrows, lines, text -- all with `containerId` binding
-- **4 chart types** -- bar, horizontal bar, line, pie (with donut mode)
-- **39 built-in icons** -- general + ML/AI + utility
-- **AI-powered icon generation** via Gemini API
-- **3 style presets** -- Vivid, Clean, Sketch + custom YAML
-- **SVG-to-Excalidraw conversion** with Bezier tessellation and shape classification
-- **Persistent icon library** with TF-IDF search (zero-dep) or OpenAI embedding search
-- **Full CJK** (Chinese, Japanese, Korean) text support
-- **Layout helpers** to prevent text/shape overlap
-- **Output** as `.excalidraw` or `.excalidraw.md` (Obsidian)
+| | Feature | Description |
+|---|---------|-------------|
+| 📐 | **Element Builders** | Rectangles, ellipses, diamonds, arrows, lines, text — all with `containerId` binding |
+| 📊 | **4 Chart Types** | Bar, horizontal bar, line, pie (with donut mode) |
+| 🎨 | **39 Built-in Icons** | General + ML/AI + utility icon sets |
+| 🤖 | **AI Icon Generation** | Generate custom icons via Gemini API |
+| 🎭 | **3 Style Presets** | Vivid, Clean, Sketch + custom YAML styles |
+| 🔄 | **SVG Conversion** | SVG-to-Excalidraw with Bezier tessellation and shape classification |
+| 📚 | **Icon Library** | Persistent storage with TF-IDF search (zero-dep) or OpenAI embeddings |
+| 🇨🇳 | **Full CJK Support** | Chinese, Japanese, Korean text rendering |
+| 📏 | **Layout Helpers** | Prevent text/shape overlap with positional utilities |
+| 💾 | **Dual Output** | `.excalidraw` (JSON) or `.excalidraw.md` (Obsidian) |
+
+> \* AI icon generation requires a Gemini API key; YAML styles require PyYAML
 
 ---
 
