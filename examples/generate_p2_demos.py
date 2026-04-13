@@ -146,24 +146,26 @@ def demo_icon_library():
     section1 = text_standalone(130, 80, "save_icon() — persistent storage", fs=16, color="#868e96")
 
     f1 = frame(20, 110, 460, 160, "Save Workflow", stroke="#1971c2")
+    f1_mw = 420  # frame width 460 - 2*20 padding
     steps = [
-        text_standalone(40, 145, "1. Generate or convert icon elements", fs=13, color="#1971c2", text_align="left"),
-        text_standalone(40, 170, "2. save_icon('name', elements, description='...')", fs=13, color="#1971c2", text_align="left"),
-        text_standalone(40, 195, "3. Stored at ~/.excalidraw-gen/icons/", fs=13, color="#1971c2", text_align="left"),
-        text_standalone(40, 220, "4. index.json holds metadata + embeddings", fs=13, color="#1971c2", text_align="left"),
-        text_standalone(40, 245, "5. Optional: OpenAI embeddings for semantic search", fs=13, color="#868e96", text_align="left"),
+        text_standalone(40, 145, "1. Generate or convert icon elements", fs=13, color="#1971c2", text_align="left", max_width=f1_mw),
+        text_standalone(40, 170, "2. save_icon('name', elements, description='...')", fs=13, color="#1971c2", text_align="left", max_width=f1_mw),
+        text_standalone(40, 195, "3. Stored at ~/.excalidraw-gen/icons/", fs=13, color="#1971c2", text_align="left", max_width=f1_mw),
+        text_standalone(40, 220, "4. index.json holds metadata + embeddings", fs=13, color="#1971c2", text_align="left", max_width=f1_mw),
+        text_standalone(40, 245, "5. Optional: OpenAI embeddings for semantic search", fs=13, color="#868e96", text_align="left", max_width=f1_mw),
     ]
 
     # --- Section 2: Search workflow ---
     section2 = text_standalone(620, 80, "find_icons() — vector search", fs=16, color="#868e96")
 
     f2 = frame(500, 110, 460, 160, "Search Workflow", stroke="#2f9e44")
+    f2_mw = 420
     search_steps = [
-        text_standalone(520, 145, "1. find_icons('database storage')", fs=13, color="#2f9e44", text_align="left"),
-        text_standalone(520, 170, "2. TF-IDF: tokenize → build vectors → cosine sim", fs=13, color="#2f9e44", text_align="left"),
-        text_standalone(520, 195, "3. Returns ranked results with scores", fs=13, color="#2f9e44", text_align="left"),
-        text_standalone(520, 220, "4. load_icon(name, x, y) to place in diagram", fs=13, color="#2f9e44", text_align="left"),
-        text_standalone(520, 245, "5. Zero-dependency — works offline", fs=13, color="#868e96", text_align="left"),
+        text_standalone(520, 145, "1. find_icons('database storage')", fs=13, color="#2f9e44", text_align="left", max_width=f2_mw),
+        text_standalone(520, 170, "2. TF-IDF: tokenize → build vectors → cosine sim", fs=13, color="#2f9e44", text_align="left", max_width=f2_mw),
+        text_standalone(520, 195, "3. Returns ranked results with scores", fs=13, color="#2f9e44", text_align="left", max_width=f2_mw),
+        text_standalone(520, 220, "4. load_icon(name, x, y) to place in diagram", fs=13, color="#2f9e44", text_align="left", max_width=f2_mw),
+        text_standalone(520, 245, "5. Zero-dependency — works offline", fs=13, color="#868e96", text_align="left", max_width=f2_mw),
     ]
 
     # --- Section 3: Demo data flow ---

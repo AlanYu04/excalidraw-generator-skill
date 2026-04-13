@@ -61,7 +61,11 @@ def rect(x, y, w, h, fill="transparent", stroke="#1e1e1e", sw=2, roughness=1,
     }
 
 def text_standalone(cx, cy, txt, fs=20, color="#1e1e1e", font_family=3, roughness=0,
-                    text_align="center"):
+                    text_align="center", max_width=None):
+    # Auto-shrink font size if text exceeds max_width
+    if max_width is not None:
+        while fs > 6 and estimate_text_width(txt, fs) > max_width:
+            fs -= 1
     tw = estimate_text_width(txt, fs)
     th = estimate_text_height(txt, fs)
     # For center: x = cx - tw/2; for left: x = cx; for right: x = cx - tw
