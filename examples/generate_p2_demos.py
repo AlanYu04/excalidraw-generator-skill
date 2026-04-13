@@ -147,11 +147,11 @@ def demo_icon_library():
 
     f1 = frame(20, 110, 380, 160, "Save Workflow", stroke="#1971c2")
     steps = [
-        text_standalone(210, 145, "1. Generate or convert icon elements", fs=13, color="#1971c2"),
-        text_standalone(210, 170, "2. save_icon('name', elements, description='...')", fs=13, color="#1971c2"),
-        text_standalone(210, 195, "3. Stored at ~/.excalidraw-gen/icons/", fs=13, color="#1971c2"),
-        text_standalone(210, 220, "4. index.json holds metadata + embeddings", fs=13, color="#1971c2"),
-        text_standalone(210, 245, "5. Optional: OpenAI embeddings for semantic search", fs=13, color="#868e96"),
+        text_standalone(40, 145, "1. Generate or convert icon elements", fs=13, color="#1971c2", text_align="left"),
+        text_standalone(40, 170, "2. save_icon('name', elements, description='...')", fs=13, color="#1971c2", text_align="left"),
+        text_standalone(40, 195, "3. Stored at ~/.excalidraw-gen/icons/", fs=13, color="#1971c2", text_align="left"),
+        text_standalone(40, 220, "4. index.json holds metadata + embeddings", fs=13, color="#1971c2", text_align="left"),
+        text_standalone(40, 245, "5. Optional: OpenAI embeddings for semantic search", fs=13, color="#868e96", text_align="left"),
     ]
 
     # --- Section 2: Search workflow ---
@@ -159,11 +159,11 @@ def demo_icon_library():
 
     f2 = frame(420, 110, 380, 160, "Search Workflow", stroke="#2f9e44")
     search_steps = [
-        text_standalone(610, 145, "1. find_icons('database storage')", fs=13, color="#2f9e44"),
-        text_standalone(610, 170, "2. TF-IDF: tokenize → build vectors → cosine sim", fs=13, color="#2f9e44"),
-        text_standalone(610, 195, "3. Returns ranked results with scores", fs=13, color="#2f9e44"),
-        text_standalone(610, 220, "4. load_icon(name, x, y) to place in diagram", fs=13, color="#2f9e44"),
-        text_standalone(610, 245, "5. Zero-dependency — works offline", fs=13, color="#868e96"),
+        text_standalone(440, 145, "1. find_icons('database storage')", fs=13, color="#2f9e44", text_align="left"),
+        text_standalone(440, 170, "2. TF-IDF: tokenize → build vectors → cosine sim", fs=13, color="#2f9e44", text_align="left"),
+        text_standalone(440, 195, "3. Returns ranked results with scores", fs=13, color="#2f9e44", text_align="left"),
+        text_standalone(440, 220, "4. load_icon(name, x, y) to place in diagram", fs=13, color="#2f9e44", text_align="left"),
+        text_standalone(440, 245, "5. Zero-dependency — works offline", fs=13, color="#868e96", text_align="left"),
     ]
 
     # --- Section 3: Demo data flow ---

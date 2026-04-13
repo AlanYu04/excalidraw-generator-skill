@@ -60,12 +60,20 @@ def rect(x, y, w, h, fill="transparent", stroke="#1e1e1e", sw=2, roughness=1,
         "updated": ts(), "link": None, "locked": False
     }
 
-def text_standalone(cx, cy, txt, fs=20, color="#1e1e1e", font_family=3, roughness=0):
+def text_standalone(cx, cy, txt, fs=20, color="#1e1e1e", font_family=3, roughness=0,
+                    text_align="center"):
     tw = estimate_text_width(txt, fs)
     th = estimate_text_height(txt, fs)
+    # For center: x = cx - tw/2; for left: x = cx; for right: x = cx - tw
+    if text_align == "center":
+        x = cx - tw / 2
+    elif text_align == "right":
+        x = cx - tw
+    else:  # left
+        x = cx
     return {
         "id": uid(), "type": "text",
-        "x": cx - tw/2, "y": cy - th/2, "width": tw, "height": th,
+        "x": x, "y": cy - th/2, "width": tw, "height": th,
         "angle": 0, "strokeColor": color, "backgroundColor": "transparent",
         "fillStyle": "solid", "strokeWidth": 2, "strokeStyle": "solid",
         "roughness": roughness, "opacity": 100, "groupIds": [],
@@ -73,7 +81,7 @@ def text_standalone(cx, cy, txt, fs=20, color="#1e1e1e", font_family=3, roughnes
         "versionNonce": sd(), "isDeleted": False, "boundElements": [],
         "updated": ts(), "link": None, "locked": False,
         "text": txt, "fontSize": fs, "fontFamily": font_family,
-        "textAlign": "center", "verticalAlign": "middle",
+        "textAlign": text_align, "verticalAlign": "middle",
         "containerId": None, "originalText": txt, "lineHeight": 1.25
     }
 
