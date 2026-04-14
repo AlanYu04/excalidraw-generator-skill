@@ -2,6 +2,8 @@
 
 # ✏️ Excalidraw Generator
 
+**[English](README.md)** | **[中文](README_CN.md)**
+
 **AI-powered diagram generator for Claude Code**
 
 Generate publication-quality flowcharts, architecture diagrams, charts, and more — directly as Excalidraw JSON.
