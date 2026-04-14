@@ -121,6 +121,44 @@ save("flow.excalidraw", elements)
 
 ---
 
+## 元素构建器
+
+| 函数 | 签名 | 返回值 |
+|------|------|--------|
+| `rect` | `rect(x, y, w, h, fill, stroke, sw, roughness, fill_style, stroke_style)` | `dict` |
+| `ellipse` | `ellipse(x, y, w, h, fill, stroke, sw, roughness, fill_style)` | `dict` |
+| `diamond` | `diamond(x, y, w, h, fill, stroke, sw, roughness, fill_style)` | `dict` |
+| `labeled_rect` | `labeled_rect(x, y, w, h, label, fill, stroke, sw, fs, label_color, roughness, font_family, fill_style, stroke_style)` | `[rect, text]` |
+| `labeled_ellipse` | `labeled_ellipse(x, y, w, h, label, fill, stroke, sw, fs, label_color, roughness, font_family, fill_style)` | `[ellipse, text]` |
+| `labeled_diamond` | `labeled_diamond(x, y, w, h, label, fill, stroke, sw, fs, label_color, roughness, font_family, fill_style)` | `[diamond, text]` |
+| `text_standalone` | `text_standalone(cx, cy, txt, fs=20, color, font_family=3, roughness=0, text_align="center", max_width=None)` | `dict` |
+| `arrow` | `arrow(x, y, dx=0, dy=0, *, x2=None, y2=None, stroke, sw, roughness)` | `dict` |
+| `line` | `line(x, y, dx=0, dy=0, *, x2=None, y2=None, stroke, sw, roughness)` | `dict` |
+| `numbered_circle` | `numbered_circle(cx, cy, num, fill, stroke)` | `[ellipse, text]` |
+| `frame` | `frame(x, y, w, h, name="Frame", stroke, sw)` | `dict` |
+| `group` | `group(elements)` | `list[dict]` |
+| `bind_arrow` | `bind_arrow(arrow_el, start_el, end_el, gap=2)` | `dict` |
+| `connect` | `connect(start_el, end_el, stroke, sw, roughness, gap=8)` | `dict` |
+| `image_embed` | `image_embed(x, y, w, h, base64_data, mime="image/png")` | `(element, files)` |
+
+`text_standalone` 支持 `text_align`（"center"、"left"、"right"）和 `max_width` — 设置后字体大小会自动缩小直到文本适合宽度。
+
+---
+
+## 布局助手
+
+防止文字与形状重叠的定位工具：
+
+```python
+from core.engine import below, right_of, above
+
+y2 = below(y=100, h=60, gap=15)    # y2 = 175
+x2 = right_of(x=50, w=200, gap=10) # x2 = 260
+y_above = above(y=100, gap=10)     # y_above = 90
+```
+
+---
+
 ## 图表类型
 
 ### 柱状图
@@ -181,18 +219,113 @@ elements = pie_chart(
 
 ## 内置图标（39 个）
 
+### 通用（10）
+
+| 图标 | 名称 | 说明 |
+|------|------|------|
+| 圆柱 | `database` | 数据存储 |
+| 人形 | `user` | 用户、角色 |
+| 云 | `cloud` | 云服务 |
+| 机架 | `server` | 基础设施 |
+| 齿轮 | `gear` | 设置、配置 |
+| 文件 | `document` | 文件、页面 |
+| 盾牌 | `shield` | 安全 |
+| 箭头 | `arrow-right` | 方向 |
+| 勾选 | `check` | 批准、完成 |
+| 三角 | `warning` | 警告、注意 |
+
+### ML/AI（12）
+
+| 图标 | 名称 | 说明 |
+|------|------|------|
+| 方块 | `transformer-block` | 多头注意力 + FFN |
+| 箭头 | `attention-head` | Q, K, V 汇聚 |
+| 网格 | `embedding-layer` | 嵌入矩阵 |
+| 堆叠 | `feedforward` | 两层 FFN |
+| 编码 | `encoder` | 编码器堆栈 |
+| 解码 | `decoder` | 解码器堆栈 |
+| 曲线 | `loss-function` | 下降损失曲线 |
+| 螺旋 | `optimizer` | 梯度下降 |
+| 芯片 | `gpu` | GPU / 加速器 |
+| 机器人 | `robot` | AI 智能体 |
+| 大脑 | `brain` | 智能 |
+| 节点 | `neural-net` | 三层网络 |
+
+### 工具（17）
+
+| 图标 | 名称 | 说明 |
+|------|------|------|
+| 立方体 | `cube` | 通用对象 |
+| 漏斗 | `data-pipeline` | ETL、数据处理 |
+| 矩阵 | `matrix` | 二维矩阵 |
+| 锁 | `lock` | 安全、认证 |
+| 信号 | `wifi` | 连接 |
+| 心形 | `heart` | 健康、收藏 |
+| 星形 | `star` | 评分、收藏 |
+| 闪电 | `lightning` | 速度、能量 |
+| 时钟 | `clock` | 时间、调度 |
+| 放大镜 | `magnifier` | 搜索、检查 |
+| 火焰 | `fire` | 热门、趋势 |
+| 地球 | `globe` | 全球、网络 |
+| 气泡 | `chat` | 消息 |
+| 括号 | `api` | API 端点 |
+| 终端 | `terminal` | CLI、控制台 |
+| 文件夹 | `folder` | 目录 |
+| 钥匙 | `key` | 认证 |
+
 ```python
 from core.icons import icon, list_icons
 
-print(list_icons())  # 查看所有图标
-elements = icon("database", x=100, y=50, scale=1.0)
+# 查看所有图标
+print(list_icons())
+
+# 放置图标
+elements = icon("database", x=100, y=50, scale=1.0, stroke="#1e1e1e", sw=2, roughness=1)
 ```
 
-| 分类 | 图标名称 |
-|------|---------|
-| **通用（10）** | `database` `user` `cloud` `server` `gear` `document` `shield` `arrow-right` `check` `warning` |
-| **ML/AI（12）** | `transformer-block` `attention-head` `embedding-layer` `feedforward` `encoder` `decoder` `loss-function` `optimizer` `gpu` `robot` `brain` `neural-net` |
-| **工具（17）** | `cube` `data-pipeline` `matrix` `lock` `wifi` `heart` `star` `lightning` `clock` `magnifier` `fire` `globe` `chat` `api` `terminal` `folder` `key` |
+### 图标库（持久化 & 可搜索）
+
+保存、加载和搜索自定义图标，存储在 `~/.excalidraw-gen/icons/`。
+
+| 函数 | 说明 |
+|------|------|
+| `save_icon(name, elements, description, tags, source)` | 保存图标到库 |
+| `load_icon(name, x=0, y=0, scale=1.0)` | 加载并重定位图标 |
+| `delete_icon(name)` | 删除图标 |
+| `list_library_icons()` | 列出所有已保存图标 |
+| `find_icons(query, limit=5, use_embeddings=False)` | 按描述搜索（TF-IDF 或 OpenAI 向量） |
+| `import_excalidrawlib(filepath, descriptions, tags_map, prefix)` | 从 `.excalidrawlib` 文件导入 |
+
+```python
+from core.icon_library import save_icon, load_icon, find_icons
+
+save_icon("my-server", elements, description="带 LED 指示灯的服务器",
+          tags=["server", "hardware"])
+
+results = find_icons("服务器 基础设施")
+server = load_icon(results[0]["name"], x=200, y=100)
+```
+
+### AI 图标生成
+
+通过 Gemini API 生成图标，自动 SVG 转 Excalidraw 转换，支持 PNG 回退。
+
+| 函数 | 说明 |
+|------|------|
+| `configure(api_url, api_key, model)` | 保存 Gemini API 配置 |
+| `generate_icon(description, x, y, scale, stroke, sw, roughness, prompt)` | 生成图标为 Excalidraw 元素 |
+| `generate_icon_svg(description, prompt, model)` | 生成原始 SVG 字符串 |
+| `generate_and_save(name, description, tags, **kwargs)` | 生成并保存到库 |
+
+```python
+from core.ai_icons import configure, generate_icon, generate_and_save
+
+configure(api_url="https://generativelanguage.googleapis.com/v1beta",
+          api_key="YOUR_KEY", model="gemini-2.0-flash")
+
+elements = generate_icon("kubernetes pod", x=100, y=200, scale=1.5)
+generate_and_save("k8s-pod", "Kubernetes pod 图标", tags=["k8s", "container"])
+```
 
 ---
 
@@ -204,9 +337,91 @@ elements = icon("database", x=100, y=50, scale=1.0)
 | **Clean** | Helvetica (2) | 0 | solid | 简约精确 |
 | **Sketch** | Virgil (1) | 2 | hachure | 手绘风格 |
 
+```python
+from styles import load_style, vivid_style, clean_style, sketch_style
+
+style = load_style("vivid")
+fill, stroke = style.get_color_pair("primary")  # ("#a5d8ff", "#2B5B84")
+fill, stroke = style.get_color_pair("danger")    # ("#ffc9c9", "#e03131")
+```
+
+**别名：** `conference` -> `vivid`、`journal` -> `clean`、`ppt` -> `sketch`
+
+### 自定义 YAML 样式
+
+创建 `~/.excalidraw-gen/styles/dark-mode.yaml`：
+
+```yaml
+name: "Dark Mode"
+colors:
+  background: "#1a1a2e"
+  primary: "#4A90E2"
+  accent: "#E67E22"
+  text: "#e0e0e0"
+  border: "#555555"
+typography:
+  font_family: 3
+  title_size: 24
+  body_size: 14
+layout:
+  roughness: 1
+  border_width: 2
+  default_gap: 50
+```
+
+然后使用 `load_style("dark-mode")` 加载。
+
+`get_color_pair(role)` 支持：`primary`、`accent`、`success`、`warning`、`danger`、`info`、`neutral`。
+
+---
+
+## SVG 转换器
+
+将 SVG 字符串或文件转换为原生 Excalidraw 元素。
+
+```python
+from core.svg_converter import svg_to_elements, svg_file_to_elements
+
+# 从字符串转换
+elements = svg_to_elements(
+    '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40"/></svg>',
+    x=100, y=50, scale=1.0,
+    stroke="#1e1e1e", stroke_width=2, roughness=1,
+)
+
+# 从文件转换
+elements = svg_file_to_elements("icon.svg", x=200, y=100, scale=2.0)
+```
+
+支持的 SVG 特性：`<path>`（M/L/H/V/C/S/Q/T/A/Z）、`<rect>`、`<circle>`、`<ellipse>`、`<line>`、`<polygon>`、`<polyline>`、`<defs>`、`<use>`、贝塞尔曲线细分、RDP 简化、渐变填充解析、自动形状分类（椭圆、矩形或线条）。
+
+---
+
+## CJK 支持
+
+CJK 感知的文本宽度估算确保中文、日文、韩文文本正确居中。无需额外配置 — 所有文本函数自动处理 CJK 字符。
+
+```python
+# CJK 文本适用于任何元素
+elements = labeled_rect(100, 50, 200, 60, "数据处理流程", font_family=3)
+
+# 多行 CJK 文本
+t = text_standalone(300, 100, "第一行\n第二行\n第三行", fs=16, font_family=3)
+```
+
+如需 CJK 优化渲染，在 Excalidraw 中使用 `font_family=5`。
+
 ---
 
 ## 输出格式
+
+### `.excalidraw`
+
+标准 JSON — 适用于 [excalidraw.com](https://excalidraw.com)、VS Code 扩展以及任何兼容 Excalidraw 的工具。
+
+### `.excalidraw.md`
+
+Markdown 包装格式，适用于 [Obsidian Excalidraw 插件](https://github.com/zsviczian/obsidian-excalidraw-plugin)。
 
 ```python
 from core.engine import save
@@ -216,6 +431,57 @@ save("diagram.excalidraw.md", elements)   # Obsidian 格式
 ```
 
 `save()` 根据文件扩展名自动选择格式。
+
+---
+
+## 项目结构
+
+```
+excalidraw-generator/
+├── SKILL.md                    # Claude Code skill 入口
+├── README.md
+├── docs/
+│   └── images/                 # 截图和演示画廊
+├── core/
+│   ├── __init__.py
+│   ├── engine.py               # 元素构建器、布局助手、输出
+│   ├── icons.py                # 39 个内置图标
+│   ├── charts.py               # 柱状图、横向柱状图、折线图、饼图
+│   ├── svg_converter.py        # SVG 转 Excalidraw 转换
+│   ├── icon_library.py         # 持久化图标库 & TF-IDF 搜索
+│   └── ai_icons.py             # 通过 Gemini API 生成 AI 图标
+├── styles/
+│   ├── __init__.py
+│   ├── base.py                 # StyleConfig 数据类
+│   ├── conference.py           # Vivid 预设
+│   ├── journal.py              # Clean 预设
+│   ├── ppt.py                  # Sketch 预设
+│   └── loader.py               # 样式解析器 + 自定义 YAML
+├── prompts/
+│   ├── conference-prompt.md
+│   ├── journal-prompt.md
+│   └── ppt-prompt.md
+├── tests/
+│   ├── test_smoke.py
+│   ├── test_labeled_shapes.py
+│   ├── test_group_frame.py
+│   ├── test_image_arrow.py
+│   ├── test_icons.py
+│   ├── test_svg_converter.py
+│   ├── test_charts.py
+│   ├── test_icon_library.py
+│   └── test_ai_icons.py
+├── examples/
+│   ├── generate_style_v3.py
+│   ├── generate_p1_demos.py
+│   ├── generate_p2_demos.py
+│   └── *.excalidraw            # 示例输出
+└── assets/
+    ├── icon.svg
+    ├── demo-gallery.png
+    ├── bar-charts-demo.png
+    └── how-it-works.png
+```
 
 ---
 
