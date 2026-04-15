@@ -3,7 +3,6 @@ Style loader — resolves a style name to a StyleConfig instance.
 Supports built-in presets and custom YAML configs.
 """
 import os
-import yaml
 from .base import StyleConfig
 from .conference import vivid_style
 from .journal import clean_style
@@ -53,6 +52,13 @@ def load_style(name: str) -> StyleConfig:
 
 def _load_yaml_style(path: str) -> StyleConfig:
     """Parse a YAML file into a StyleConfig."""
+    try:
+        import yaml
+    except ImportError as exc:
+        raise ImportError(
+            "PyYAML is required for custom YAML styles. Install `pyyaml` to load custom styles."
+        ) from exc
+
     with open(path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
@@ -63,23 +69,40 @@ def _load_yaml_style(path: str) -> StyleConfig:
         cfg.description = data["description"]
 
     colors = data.get("colors", {})
-    for key in ["background", "primary", "accent", "border", "muted"]:
+    for key in ["background", "primary", "accent", "muted"]:
         if key in colors:
             setattr(cfg, key, colors[key])
+    if "border" in colors:
+        cfg.border_color = colors["border"]
     if "text" in colors:
         cfg.text_color = colors["text"]
+    for key in [
+        "success", "warning", "danger", "info",
+        "primary_fill", "accent_fill", "success_fill",
+        "warning_fill", "danger_fill", "info_fill", "neutral_fill",
+    ]:
+        if key in colors:
+            setattr(cfg, key, colors[key])
 
     typo = data.get("typography", {})
-    for key in ["font_family", "title_size", "body_size", "label_size"]:
+    for key in [
+        "font_family", "title_size", "subtitle_size",
+        "body_size", "label_size", "caption_size",
+    ]:
         if key in typo:
             setattr(cfg, key, typo[key])
 
     layout = data.get("layout", {})
-    for key in ["roughness", "border_width", "arrow_width", "default_gap"]:
+    for key in [
+        "roughness", "border_width", "arrow_width",
+        "default_gap", "padding", "grid_step", "spacing_policy",
+    ]:
         if key in layout:
             setattr(cfg, key, layout[key])
     if "border_radius" in layout:
         cfg.border_radius = layout["border_radius"]
+    if "allowed_arrow_modes" in layout:
+        cfg.allowed_arrow_modes = tuple(layout["allowed_arrow_modes"])
 
     return cfg
 

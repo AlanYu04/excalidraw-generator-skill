@@ -12,7 +12,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Claude Code Skill](https://img.shields.io/badge/Claude_Code-Skill-blueviolet?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMkw0IDdWMTdMMTIgMjJMMjAgMTdWN0wxMiAyWiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+)](https://github.com/AlanYu04/excalidraw-generator-skill)
 
-`39 个内置图标` · `4 种图表类型` · `3 种样式预设` · `CJK 支持` · `零依赖`
+`39 个内置图标` · `4 种图表类型` · `3 种样式预设` · `CJK 支持` · `LaTeX 公式` · `零依赖`
 
 </div>
 
@@ -30,6 +30,7 @@
 | 🔄 | **SVG 转换** | SVG 转 Excalidraw，支持贝塞尔曲线和形状分类 |
 | 📚 | **图标库** | 持久化存储，支持 TF-IDF 搜索或 OpenAI 向量搜索 |
 | 🇨🇳 | **CJK 支持** | 中文、日文、韩文文本渲染 |
+| 📏 | **LaTeX 公式** | Mathtext + usetex 回退，4 种字体可选 |
 | 📏 | **布局助手** | 防止文字与形状重叠 |
 | 💾 | **双格式输出** | `.excalidraw`（JSON）或 `.excalidraw.md`（Obsidian） |
 
@@ -47,6 +48,35 @@
 |:---:|:---:|:---:|
 | ![Architecture](docs/images/architecture.png) | ![Bar Chart](docs/images/bar-chart.png) | ![Icons](docs/images/icons.png) |
 | ![Line Chart](docs/images/line-chart.png) | ![Bar Chart 2](docs/images/bar-chart-2.png) | |
+
+### 📐 LaTeX 公式渲染
+
+将 LaTeX 公式渲染为 PNG 图片，支持 4 种字体选择。简单数学公式使用 matplotlib mathtext；复杂环境如 `pmatrix` / `array` 自动回退到系统 LaTeX + amsmath。
+
+![字体对比](docs/images/font-comparison.png)
+
+```python
+from core.latex import formula
+
+# 简单公式（使用 mathtext 渲染）
+elements = formula(r"E = mc^2", x=100, y=50, font_size=20)
+
+# 复杂公式含矩阵（自动回退到 usetex + amsmath）
+elements = formula(r"\begin{pmatrix} a & b \\ c & d \end{pmatrix}", x=100, y=100, font_size=14)
+
+# 全局修改默认字体
+import core.latex
+core.latex.DEFAULT_FONTSET = "stix"  # 或 "cm", "dejavusans", "dejavuserif"
+
+# 或按公式单独设置
+elements = formula(r"\alpha + \beta = \gamma", x=100, y=150, font_size=20, fontset="stix")
+```
+
+支持的 mathtext 语法：分数、积分、求和、极限、希腊字母、根号、上下标。
+
+不支持 mathtext（自动回退 usetex）：`\begin{pmatrix}`、`\begin{array}`、`\begin{cases}`、`\begin{smallmatrix}`。
+
+注意：`usetex` 模式需要安装 LaTeX（`pdflatex` + `amsmath` 包），且忽略 `fontset` 参数。
 
 ### 🚀 实际案例
 
@@ -137,11 +167,12 @@ save("flow.excalidraw", elements)
 | `numbered_circle` | `numbered_circle(cx, cy, num, fill, stroke)` | `[ellipse, text]` |
 | `frame` | `frame(x, y, w, h, name="Frame", stroke, sw)` | `dict` |
 | `group` | `group(elements)` | `list[dict]` |
-| `bind_arrow` | `bind_arrow(arrow_el, start_el, end_el, gap=2)` | `dict` |
-| `connect` | `connect(start_el, end_el, stroke, sw, roughness, gap=8)` | `dict` |
+| `bind_arrow` | `bind_arrow(arrow_el, start_el, end_el, gap=2, start_focus=None, end_focus=None)` | `dict` |
+| `connect` | `connect(start_el, end_el, stroke, sw, roughness, gap=8, elbowed=False, start_focus=None, end_focus=None)` | `dict` |
 | `image_embed` | `image_embed(x, y, w, h, base64_data, mime="image/png")` | `(element, files)` |
 
 `text_standalone` 支持 `text_align`（"center"、"left"、"right"）和 `max_width` — 设置后字体大小会自动缩小直到文本适合宽度。
+`bind_arrow()` 和 `connect()` 默认会根据几何关系推断边缘 focus，避免多根箭头塌到宽目标的中心点。
 
 ---
 

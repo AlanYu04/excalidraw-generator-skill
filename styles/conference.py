@@ -10,7 +10,7 @@ def vivid_style() -> StyleConfig:
         name="vivid",
         description="Rich colorful style with lots of detail and visual hierarchy",
 
-        # Colors — full vibrant palette
+        # Colors — conference-safe palette
         background="#FFFFFF",
         primary="#2B5B84",
         accent="#E67E22",
@@ -18,33 +18,38 @@ def vivid_style() -> StyleConfig:
         border_color="#2B5B84",
         muted="#6c757d",
 
-        success="#2f9e44",
-        warning="#f08c00",
-        danger="#e03131",
-        info="#1971c2",
+        success="#73C6B6",
+        warning="#E67E22",
+        danger="#C0392B",
+        info="#4A90E2",
 
-        primary_fill="#a5d8ff",
+        primary_fill="#DCEAF6",
         accent_fill="#ffd8a8",
-        success_fill="#b2f2bb",
-        warning_fill="#fff3bf",
-        danger_fill="#ffc9c9",
-        info_fill="#99e9f2",
-        neutral_fill="#dee2e6",
+        success_fill="#D5F5E3",
+        warning_fill="#FDEBD0",
+        danger_fill="#FADBD8",
+        info_fill="#D6EAF8",
+        neutral_fill="#D5DBDB",
 
-        # Typography — larger for readability
-        title_size=22,
+        # Typography — prompt contract source of truth
+        font_family=2,
+        title_size=20,
         subtitle_size=14,
-        body_size=14,
-        label_size=11,
-        caption_size=10,
+        body_size=12,
+        label_size=10,
+        caption_size=9,
 
-        # Layout — balanced
-        border_width=2,
-        arrow_width=2,
+        # Layout — compact academic diagram
+        roughness=0,
+        border_width=1.5,
+        arrow_width=1.5,
         default_gap=45,
         padding=8,
+        grid_step=20,
+        spacing_policy="balanced",
 
-        border_radius=True,
+        border_radius=False,
         use_groups=False,
         compact_layout=False,
+        allowed_arrow_modes=("straight",),
     )

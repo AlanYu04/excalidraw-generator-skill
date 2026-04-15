@@ -12,7 +12,7 @@ Generate publication-quality flowcharts, architecture diagrams, charts, and more
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Claude Code Skill](https://img.shields.io/badge/Claude_Code-Skill-blueviolet?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMkw0IDdWMTdMMTIgMjJMMjAgMTdWN0wxMiAyWiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+)](https://github.com/AlanYu04/excalidraw-generator-skill)
 
-`39 Built-in Icons` · `4 Chart Types` · `3 Style Presets` · `CJK Support` · `Zero Dependencies`
+`39 Built-in Icons` · `4 Chart Types` · `3 Style Presets` · `CJK Support` · `LaTeX Formulas` · `Zero Dependencies`
 
 </div>
 
@@ -30,6 +30,7 @@ Generate publication-quality flowcharts, architecture diagrams, charts, and more
 | 🔄 | **SVG Conversion** | SVG-to-Excalidraw with Bezier tessellation and shape classification |
 | 📚 | **Icon Library** | Persistent storage with TF-IDF search (zero-dep) or OpenAI embeddings |
 | 🇨🇳 | **Full CJK Support** | Chinese, Japanese, Korean text rendering |
+| 🇨 | **LaTeX Formulas** | Mathtext + usetex fallback with 4 font options |
 | 📏 | **Layout Helpers** | Prevent text/shape overlap with positional utilities |
 | 💾 | **Dual Output** | `.excalidraw` (JSON) or `.excalidraw.md` (Obsidian) |
 
@@ -47,6 +48,35 @@ Generate publication-quality flowcharts, architecture diagrams, charts, and more
 |:---:|:---:|:---:|
 | ![Architecture](docs/images/architecture.png) | ![Bar Chart](docs/images/bar-chart.png) | ![Icons](docs/images/icons.png) |
 | ![Line Chart](docs/images/line-chart.png) | ![Bar Chart 2](docs/images/bar-chart-2.png) | |
+
+### 📐 LaTeX Formula Rendering
+
+LaTeX formulas rendered as PNG images with 4 font options. Simple math uses matplotlib mathtext; complex environments like `pmatrix` / `array` automatically fall back to system LaTeX + amsmath.
+
+![Font Comparison](docs/images/font-comparison.png)
+
+```python
+from core.latex import formula
+
+# Simple formula (renders via mathtext)
+elements = formula(r"E = mc^2", x=100, y=50, font_size=20)
+
+# Complex formula with matrix (falls back to usetex + amsmath)
+elements = formula(r"\begin{pmatrix} a & b \\ c & d \end{pmatrix}", x=100, y=100, font_size=14)
+
+# Change default font globally
+import core.latex
+core.latex.DEFAULT_FONTSET = "stix"  # or "cm", "dejavusans", "dejavuserif"
+
+# Or per-formula
+elements = formula(r"\alpha + \beta = \gamma", x=100, y=150, font_size=20, fontset="stix")
+```
+
+Supported mathtext syntax: fractions, integrals, sums, limits, Greek letters, square roots, subscripts/superscripts.
+
+Unsupported by mathtext (auto-fallback to usetex): `\begin{pmatrix}`, `\begin{array}`, `\begin{cases}`, `\begin{smallmatrix}`.
+
+Note: `usetex` mode requires a LaTeX installation (`pdflatex` + `amsmath` package) and ignores the `fontset` parameter.
 
 ### 🚀 Real-World Cases
 
@@ -137,11 +167,12 @@ save("flow.excalidraw", elements)
 | `numbered_circle` | `numbered_circle(cx, cy, num, fill, stroke)` | `[ellipse, text]` |
 | `frame` | `frame(x, y, w, h, name="Frame", stroke, sw)` | `dict` |
 | `group` | `group(elements)` | `list[dict]` |
-| `bind_arrow` | `bind_arrow(arrow_el, start_el, end_el, gap=2)` | `dict` |
-| `connect` | `connect(start_el, end_el, stroke, sw, roughness, gap=8)` | `dict` |
+| `bind_arrow` | `bind_arrow(arrow_el, start_el, end_el, gap=2, start_focus=None, end_focus=None)` | `dict` |
+| `connect` | `connect(start_el, end_el, stroke, sw, roughness, gap=8, elbowed=False, start_focus=None, end_focus=None)` | `dict` |
 | `image_embed` | `image_embed(x, y, w, h, base64_data, mime="image/png")` | `(element, files)` |
 
 `text_standalone` supports `text_align` ("center", "left", "right") and `max_width` -- when set, the font size auto-shrinks until the text fits.
+`bind_arrow()` and `connect()` infer edge focus from geometry by default so fan-in arrows do not collapse onto the center of wide targets.
 
 ---
 

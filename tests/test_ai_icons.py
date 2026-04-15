@@ -116,3 +116,37 @@ def test_generate_and_save(monkeypatch):
     assert any(i["name"] == "test-icon" for i in icons)
 
     shutil.rmtree(test_icon_dir)
+
+
+def test_generate_icon_png_fallback_attaches_files(monkeypatch):
+    from core.ai_icons import generate_icon, configure
+
+    configure(api_url="https://example.com", api_key="fake-key")
+
+    import core.ai_icons as ai
+
+    def fail_svg(*_args, **_kwargs):
+        raise ValueError("svg failed")
+
+    def mock_call_api(_url, _payload, _api_key):
+        return {
+            "candidates": [{
+                "content": {
+                    "parts": [{
+                        "inlineData": {
+                            "data": "AAAA",
+                            "mimeType": "image/png",
+                        }
+                    }]
+                }
+            }]
+        }
+
+    monkeypatch.setattr(ai, "generate_icon_svg", fail_svg)
+    monkeypatch.setattr(ai, "_call_gemini_api", mock_call_api)
+
+    elements = generate_icon("png fallback")
+    assert len(elements) == 1
+    assert elements[0]["type"] == "image"
+    assert "_files" in elements[0]
+    assert elements[0]["fileId"] in elements[0]["_files"]

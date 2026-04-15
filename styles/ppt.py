@@ -32,19 +32,24 @@ def sketch_style() -> StyleConfig:
         neutral_fill="#dee2e6",
 
         # Typography — large and readable
+        font_family=1,
         title_size=28,
         subtitle_size=18,
-        body_size=18,
-        label_size=14,
+        body_size=16,
+        label_size=13,
         caption_size=12,
 
         # Layout — relaxed, wide spacing
+        roughness=1,
         border_width=2,
         arrow_width=2,
         default_gap=55,
         padding=12,
+        grid_step=10,
+        spacing_policy="relaxed",
 
         border_radius=True,
         use_groups=False,
         compact_layout=False,
+        allowed_arrow_modes=("straight", "elbowed"),
     )

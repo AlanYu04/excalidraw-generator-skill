@@ -18,6 +18,8 @@ from collections import Counter
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+from .scene import remap_scene_references
+
 # ---------------------------------------------------------------------------
 # Storage Paths
 # ---------------------------------------------------------------------------
@@ -88,7 +90,7 @@ def _offset_elements(
 
     Returns a new list; does not modify the input.
     """
-    result = []
+    scaled = []
     for el in elements:
         new_el = dict(el)
         new_el["x"] = el.get("x", 0) * scale + x
@@ -99,14 +101,23 @@ def _offset_elements(
             new_el["points"] = [
                 [pt[0] * scale, pt[1] * scale] for pt in el["points"]
             ]
-        # Generate new IDs to avoid collisions
-        from . import engine
-        new_el["id"] = engine.uid()
-        new_el["seed"] = engine.sd()
-        new_el["versionNonce"] = engine.sd()
-        new_el["updated"] = engine.ts()
-        result.append(new_el)
-    return result
+        scaled.append(new_el)
+
+    from . import engine
+
+    remapped, _ = remap_scene_references(
+        scaled,
+        id_factory=lambda _old_id, _element: engine.uid(),
+        group_id_factory=lambda _old_group_id: engine.uid(),
+        file_id_factory=lambda _old_file_id: engine.uid(),
+    )
+
+    for el in remapped:
+        el["seed"] = engine.sd()
+        el["versionNonce"] = engine.sd()
+        el["updated"] = engine.ts()
+
+    return remapped
 
 
 # ---------------------------------------------------------------------------

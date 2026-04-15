@@ -225,6 +225,7 @@ def generate_icon(
                         inline["data"],
                         mime=inline.get("mimeType", "image/png"),
                     )
+                    el["_files"] = files
                     return [el]
     except Exception:
         pass

@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
+
+# VitePress site
+site/node_modules/
+site/.vitepress/dist/
+site/.vitepress/cache/

@@ -171,6 +171,33 @@ def test_offset_does_not_mutate():
     assert elements[0]["x"] == 5
 
 
+def test_load_icon_rewrites_internal_references():
+    start = engine.labeled_rect(0, 0, 120, 60, "Start")
+    end = engine.labeled_rect(220, 0, 120, 60, "End")
+    edge = engine.connect(start[0], end[0])
+    elements = [*start, *end, edge]
+    save_icon("compound", elements, description="compound shape")
+
+    loaded = load_icon("compound", x=100, y=100)
+    by_id = {el["id"]: el for el in loaded}
+    shape_ids = {el["id"] for el in loaded if el["type"] in {"rectangle", "ellipse", "diamond"}}
+    arrows = [el for el in loaded if el["type"] == "arrow"]
+    texts = [el for el in loaded if el["type"] == "text"]
+
+    assert len(arrows) == 1
+    arrow = arrows[0]
+    assert arrow["startBinding"]["elementId"] in shape_ids
+    assert arrow["endBinding"]["elementId"] in shape_ids
+
+    for text in texts:
+        if text.get("containerId"):
+            assert text["containerId"] in shape_ids
+
+    for shape_id in shape_ids:
+        bound = by_id[shape_id].get("boundElements") or []
+        assert all(entry["id"] in by_id for entry in bound)
+
+
 # ---------------------------------------------------------------------------
 # TF-IDF Search
 # ---------------------------------------------------------------------------

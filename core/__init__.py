@@ -3,6 +3,7 @@ from .engine import (
     rect,
     text_standalone,
     labeled_rect,
+    auto_labeled_rect,
     labeled_diamond,
     labeled_ellipse,
     arrow,
@@ -28,6 +29,11 @@ from .engine import (
     right_of,
     above,
     bounds,
+    check_overlaps,
+    check_arrow_bindings,
+    check_spacing,
+    check_richness,
+    verify_layout,
 )
 from .icons import icon, list_icons
 from .svg_converter import svg_to_elements, svg_file_to_elements
@@ -46,12 +52,33 @@ from .ai_icons import (
     generate_icon_svg,
     generate_and_save,
 )
+from .latex import formula
+from .pipeline import (
+    DiagramAnnotation,
+    DiagramCanvas,
+    DiagramEdge,
+    DiagramGroup,
+    DiagramNode,
+    DiagramSpec,
+    PipelineResult,
+    ValidationIssue,
+    ValidationReport,
+    diagram_spec_to_dict,
+    generate_diagram,
+    normalize_diagram_spec,
+    render_diagram_spec,
+    repair_scene,
+    save_generated_diagram,
+    validate_diagram_spec,
+    validate_scene_contract,
+)
 
 __all__ = [
     # Engine builders
     "rect",
     "text_standalone",
     "labeled_rect",
+    "auto_labeled_rect",
     "labeled_diamond",
     "labeled_ellipse",
     "arrow",
@@ -82,6 +109,12 @@ __all__ = [
     "right_of",
     "above",
     "bounds",
+    # Layout verification
+    "check_overlaps",
+    "check_arrow_bindings",
+    "check_spacing",
+    "check_richness",
+    "verify_layout",
     # SVG converter
     "svg_to_elements",
     "svg_file_to_elements",
@@ -102,4 +135,24 @@ __all__ = [
     "generate_icon",
     "generate_icon_svg",
     "generate_and_save",
+    # LaTeX formula
+    "formula",
+    # Pipeline
+    "DiagramAnnotation",
+    "DiagramCanvas",
+    "DiagramEdge",
+    "DiagramGroup",
+    "DiagramNode",
+    "DiagramSpec",
+    "PipelineResult",
+    "ValidationIssue",
+    "ValidationReport",
+    "diagram_spec_to_dict",
+    "generate_diagram",
+    "normalize_diagram_spec",
+    "render_diagram_spec",
+    "repair_scene",
+    "save_generated_diagram",
+    "validate_diagram_spec",
+    "validate_scene_contract",
 ]
