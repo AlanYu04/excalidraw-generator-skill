@@ -1,9 +1,23 @@
 __pycache__/
 *.pyc
 *.pyo
+.pytest_cache/
 .DS_Store
+
+# Planning / brainstorm artifacts
+.plans/
+.superpowers/
+docs/superpowers/
+
+# One-off generated files
+generate_*.py
+!scripts/
 
 # VitePress site
 site/node_modules/
-site/.vitepress/dist/
-site/.vitepress/cache/
+site/.vitepress/
+site/package-lock.json
+
+# Stray images
+image*.png
+cfbf*.png

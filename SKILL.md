@@ -5,7 +5,7 @@ description: Use when user asks to draw, create, or generate diagrams, flowchart
 
 # Excalidraw Diagram Generator
 
-Generate high-quality Excalidraw diagrams via Python script execution or direct JSON generation.
+Generate high-quality Excalidraw diagrams via Python script execution using core/ builders.
 
 ## When to Use
 
@@ -55,7 +55,7 @@ Intent confirmed: [diagram type] | [element count] elements | Style: [style]
 
 1. **"Style? (vivid/clean/sketch or describe)"**
 2. **"Output format? (.excalidraw or .excalidraw.md)"**
-3. **"Save path?"** (suggest based on current project)
+3. **"Save path?"** (suggest based on current project — MUST confirm before generating)
 
 ### Style Reference
 
@@ -70,23 +70,26 @@ Intent confirmed: [diagram type] | [element count] elements | Style: [style]
 
 ## HARD GATE: Read Style Prompt (MANDATORY — Before Writing Any Code)
 
-You MUST read the **entire** contents of the relevant style prompt file before generating any Python code or JSON. Do not summarize or skip sections.
+STOP. You MUST execute these steps IN ORDER. Skipping any step = immediate failure.
 
-### Steps
+### Steps (ALL required — no exceptions)
 
-1. Read `prompts/conference-prompt.md`
-2. Read `prompts/journal-prompt.md`
-3. Read `prompts/ppt-prompt.md`
-4. Re-read the style-specific file for the user's chosen style
-5. Output confirmation:
+1. **Use the Read tool** to read `prompts/[style]-prompt.md` (the file for the user's chosen style).
+   - If style is not yet chosen, read `prompts/conference-prompt.md` as default.
+   - You MUST make a Read tool call — reading from memory or skipping is NOT acceptable.
+2. **Output this confirmation to the user** (not silently):
    ```
-   PROMPT CHECK: [style] style loaded.
-   Key rules:
-   1. [rule from prompt]
-   2. [rule from prompt]
-   3. [rule from prompt]
+   > PROMPT CHECK: [style] style loaded.
+   > 1. [specific rule from the file you just read]
+   > 2. [specific rule from the file you just read]
+   > 3. [specific rule from the file you just read]
    ```
-6. **Do NOT skip this step even for simple diagrams.**
+   The rules must be QUOTED from the actual file, not paraphrased from memory.
+
+### Bypass Detection
+
+If no Read tool call appears in the conversation before code generation, the HARD GATE was bypassed.
+The user can verify this by checking the tool call history.
 
 ### Prompt Rules Summary
 
@@ -120,82 +123,119 @@ You MUST read the **entire** contents of the relevant style prompt file before g
 
 ## Step 2: Generate Diagram
 
-### 2A. Choose generation method
+### 2A. Generation Method
 
-| Method | When to Use |
-|--------|-------------|
-| **Python script** (via `core/` builders) | Standard diagrams, charts, tables, data-driven |
-| **Direct JSON** (agent writes `.excalidraw` JSON) | Complex layouts, freeform shapes, agent-navigated positioning |
+There is ONE method: **Python script via `core/` builders.**
 
-For **simple diagrams** (flowcharts, pipelines), prefer Python builders for reliability.
-For **complex architecture diagrams** with non-grid layouts, direct JSON generation is acceptable.
+- Use `auto_labeled_rect()`, `connect()`, `below()`, `right_of()` for ALL elements and arrows.
+- Do NOT write raw `.excalidraw` JSON by hand.
+- Do NOT create custom arrow/line helper functions (e.g., `ortho_arrow()`, `bound_ortho_arrow()`).
+- If a builder function is missing what you need, extend `core/engine.py` first — then use it.
 
-### 2B. Layout Design (Internal — No User Questions)
+Why: Builder functions enforce grid alignment, auto-compute arrow bindings, and prevent the overlap/patch-hell cycle that comes from hand-positioned coordinates.
 
-Before writing code, design the layout:
+### 2B. Layout Design (MANDATORY OUTPUT — Show to User Before Coding)
 
-```
-## Layout: [Diagram Name]
+STOP. You MUST output a layout table to the user BEFORE writing ANY code.
+If you write code before showing this table, you have FAILED this step.
 
-### Elements
-| ID   | Label      | Type  | X          | Y          | Size    |
-|------|------------|-------|------------|------------|---------|
-| b1   | "Input"    | rect  | 100        | 100        | auto    |
-| b2   | "Process"  | rect  | r_of(b1)   | 100        | auto    |
-| d1   | "Valid?"   | diam  | mid_x      | below(b2)  | 120x80  |
+Output this exact format:
 
-### Connections
-| From | To   | Direction | Label |
-|------|------|-----------|-------|
-| b1   | b2   | right     |       |
-| b2   | d1   | down      |       |
-```
+> ## Layout Plan: [Diagram Name]
+>
+> ### Elements
+> | ID | Label | Type | X | Y | Size |
+> |----|-------|------|---|---|------|
+> | b1 | "Input" | rect | 100 | 100 | auto |
+> | b2 | "Process" | rect | r_of(b1) | 100 | auto |
+> | d1 | "Valid?" | diam | mid_x | below(b2) | 120x80 |
+>
+> ### Connections
+> | From | To | Direction | Label |
+> |------|----|-----------|-------|
+> | b1 | b2 | right | |
+> | b2 | d1 | down | |
 
-**Key Rules:**
-- Use `auto_labeled_rect` instead of hardcoded dimensions (unless grid cells)
-- Use `right_of()`, `below()`, `above()` for relative positioning
-- Use consistent gaps from style config
+**Mandatory rules for the layout table:**
+- X and Y coordinates MUST be multiples of 20 (grid snap to invisible 20px grid)
+- Every element MUST use `auto_labeled_rect()` — no hardcoded dimensions
+- Every arrow MUST use `connect()` — no custom arrow functions
+- Use `right_of()`, `below()`, `above()` for relative positioning between elements
+- Verify no bounding boxes overlap before proceeding to code
 - For CJK text: `font_family=5`, width factor 1.05x
+
+### 2B.5 Formula Detection (Auto)
+
+Scan the diagram content for mathematical expressions and decide rendering method:
+
+**Use `formula()` when the content contains ANY of:**
+- LaTeX math syntax: `\alpha`, `\beta`, `\sum`, `\prod`, `\frac{a}{b}`, `\int`, `\nabla`, `\partial`
+- Subscripts/superscripts beyond plain text capability: `x_1`, `a^2`, `\hat{y}`, `\bar{x}`
+- Equations: `E=mc^2`, `\hat{y} = f(x)`, `\mathcal{L}(\theta)`
+- Matrix/env notation: `\begin{pmatrix}`, `\begin{bmatrix}`
+- Greek letters used as variables: `\lambda`, `\theta`, `\omega`
+- Operators/symbols: `\times`, `\div`, `\leq`, `\geq`, `\approx`, `\infty`
+
+**Use `text_standalone()` when:**
+- Plain text, Chinese/English labels, names — no math symbols
+- Simple notation that renders fine in regular font (e.g., "v1.0", "Step 1", "A → B")
+
+**Mixed content:**
+- Render math portions with `formula()`, plain text portions with `text_standalone()`
+- Example: a node labeled "Loss: $\mathcal{L}(\theta)$" → use `formula()` for the whole label
+
+**In the layout table (Step 2B), mark formula elements with `type: formula`:**
+```
+| f1 | "E=mc^2" | formula | 200 | 300 | auto |
+```
 
 ### 2C. Generate
 
-1. Follow the layout table — translate each row into exact positions
-2. Use builder functions from `core/` or write direct JSON
+1. Follow the layout table from Step 2B — translate each row into code using builder functions
+2. Use `auto_labeled_rect()`, `connect()`, `below()`, `right_of()` exclusively
 3. Execute the script to produce the output file
 
 ### 2D. Verify output follows ALL style prompt rules
 
-After generating, check:
+After generating, cross-check against the style prompt you read in HARD GATE:
 - [ ] Colors match the style palette
 - [ ] Font family and sizes match style rules
 - [ ] Arrow style matches (straight/curved, width)
 - [ ] Roughness and border width match
 - [ ] No rule from the style prompt is violated
+- [ ] No custom arrow/line functions were used (only `connect()` or `bind_arrow()`)
 
-If any rule is violated, **regenerate immediately**.
+If any rule is violated, **go back to Step 2B and regenerate** — do not patch.
 
 ---
 
-## Step 2.5: Self-Check (Automatic — Before Presenting to User)
+## Step 2.5: Verification Gate (MANDATORY — Before Delivery)
 
 After generating the diagram file, run verification **before** telling the user it's done.
+This step is NOT optional. You MUST execute the verification code and report the result.
 
 ### Verification Steps
 
 1. Read the generated `.excalidraw` JSON file
-2. Run verification:
-   ```python
+2. Run verification using the Bash tool (not just in-memory — execute it):
+   ```bash
+   cd ~/.claude/skills/excalidraw-generator && python3 -c "
+   import json
    from core.engine import verify_layout
-   report = verify_layout(elements)
+   with open('[path-to-file]') as f:
+     data = json.load(f)
+   report = verify_layout(data['elements'])
+   print(json.dumps(report, indent=2, default=str))
+   "
    ```
 3. Check `report['status']`:
 
 **If FAIL** (has ERROR-level issues):
-   - Read `report['overlaps']`, `report['arrow_issues']`
-   - Identify which elements are problematic
-   - Modify the Python script or JSON to fix issues
-   - Re-execute and re-verify (up to **2 auto-fix attempts**)
-   - If still FAIL after 2 attempts → proceed to Step 3 anyway
+   - DO NOT deliver to user yet
+   - Go back to **Step 2B** — redesign the layout table with corrected positions
+   - Regenerate from the new layout (NOT patch the old code)
+   - Re-verify (up to **2 redesign attempts**)
+   - If still FAIL after 2 redesigns: deliver with explicit FAIL notice in Step 3
 
 **If WARN** (only WARNING-level issues):
    - Note the warnings in your output
@@ -676,12 +716,16 @@ elements = generate_icon("a database server rack", x=100, y=50, scale=1.5)
 
 ## Important Rules
 
-- ALWAYS read style prompts (HARD GATE) before generating any diagram
-- ALWAYS run `verify_layout()` after generation (Step 2.5)
+- ALWAYS read style prompts via Read tool call (HARD GATE) before generating any diagram
+- ALWAYS output a layout table (Step 2B) before writing ANY code
+- ALWAYS run `verify_layout()` via Bash tool after generation (Step 2.5)
 - ALWAYS use `auto_labeled_rect` for text in rectangles (auto-sizes from text)
 - Use `text_standalone` for labels and annotations outside shapes
 - Use `below()` / `right_of()` / `above()` to prevent overlap
 - Use `connect()` for arrows — it auto-computes direction and edge focus from geometry
+- **NEVER** create custom arrow/line helper functions — always use `connect()` or `bind_arrow()`
+- **NEVER** write raw `.excalidraw` JSON by hand — always use Python builders
+- **NEVER** patch coordinates one-by-one on a broken layout — go back to Step 2B and redesign
 - `save()` auto-selects format: `.excalidraw.md` -> Obsidian, `.excalidraw` -> JSON
 - `bind_arrow` modifies `start_el`/`end_el` in-place (adds boundElements)
 - `connect()` auto-computes edge focus — no need to aim arrows at element centers manually

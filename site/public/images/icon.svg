@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Background rounded rect -->
+  <rect x="8" y="8" width="240" height="240" rx="40" fill="#6965d5" />
+
+  <!-- White area (paper) -->
+  <rect x="32" y="52" width="192" height="164" rx="12" fill="#ffffff" stroke="#ffffff" stroke-width="2"/>
+
+  <!-- Hand-drawn style rectangle 1 (blue) -->
+  <rect x="48" y="68" width="72" height="44" rx="6" fill="#a5d8ff" stroke="#1971c2" stroke-width="3" stroke-linejoin="round"/>
+  <line x1="62" y1="84" x2="106" y2="84" stroke="#1971c2" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="66" y1="96" x2="98" y2="96" stroke="#1971c2" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Arrow -->
+  <line x1="124" y1="90" x2="144" y2="90" stroke="#495057" stroke-width="2.5" stroke-linecap="round"/>
+  <polygon points="144,84 154,90 144,96" fill="#495057"/>
+
+  <!-- Hand-drawn style rectangle 2 (green) -->
+  <rect x="160" y="68" width="56" height="44" rx="6" fill="#b2f2bb" stroke="#2f9e44" stroke-width="3" stroke-linejoin="round"/>
+  <line x1="172" y1="86" x2="204" y2="86" stroke="#2f9e44" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="176" y1="98" x2="196" y2="98" stroke="#2f9e44" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Arrow down -->
+  <line x1="188" y1="116" x2="188" y2="136" stroke="#495057" stroke-width="2.5" stroke-linecap="round"/>
+  <polygon points="182,136 188,146 194,136" fill="#495057"/>
+
+  <!-- Hand-drawn style rectangle 3 (orange) -->
+  <rect x="140" y="150" width="80" height="44" rx="6" fill="#ffd8a8" stroke="#e8590c" stroke-width="3" stroke-linejoin="round"/>
+  <line x1="154" y1="166" x2="208" y2="166" stroke="#e8590c" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="158" y1="178" x2="198" y2="178" stroke="#e8590c" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Numbered badge -->
+  <circle cx="60" cy="156" r="14" fill="#a5d8ff" stroke="#1971c2" stroke-width="2.5"/>
+  <text x="60" y="161" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="16" fill="#1971c2">1</text>
+
+  <!-- Second badge -->
+  <circle cx="100" cy="170" r="14" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2.5"/>
+  <text x="100" y="175" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="16" fill="#2f9e44">2</text>
+
+  <!-- "Ex" text at bottom -->
+  <text x="128" y="240" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="20" fill="#ffffff" letter-spacing="4">EXCALIDRAW</text>
+</svg>

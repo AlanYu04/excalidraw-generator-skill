@@ -1,0 +1,23 @@
+{
+  "name": "excalidraw-gen-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "copy-assets": "cp ../examples/*.excalidraw public/demos/ && cp ../docs/images/*.png public/images/ && cp ../assets/*.png public/images/ && cp ../assets/*.svg public/images/"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.0",
+    "vue": "^3.5.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@excalidraw/excalidraw": "^0.18.0"
+  }
+}
