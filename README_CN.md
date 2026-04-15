@@ -12,7 +12,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Claude Code Skill](https://img.shields.io/badge/Claude_Code-Skill-blueviolet?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMkw0IDdWMTdMMTIgMjJMMjAgMTdWN0wxMiAyWiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+)](https://github.com/AlanYu04/excalidraw-generator-skill)
 
-`39 个内置图标` · `4 种图表类型` · `3 种样式预设` · `CJK 支持` · `LaTeX 公式` · `零依赖`
+`39 个内置图标` · `4 种图表类型` · `3 种样式预设` · `CJK 支持` · `LaTeX 公式` · `图表管线` · `布局验证` · `零依赖`
 
 </div>
 
@@ -31,7 +31,9 @@
 | 📚 | **图标库** | 持久化存储，支持 TF-IDF 搜索或 OpenAI 向量搜索 |
 | 🇨🇳 | **CJK 支持** | 中文、日文、韩文文本渲染 |
 | 📏 | **LaTeX 公式** | Mathtext + usetex 回退，4 种字体可选 |
-| 📏 | **布局助手** | 防止文字与形状重叠 |
+| 🔗 | **图表管线** | 确定性管线：规范 → 验证 → 渲染 → 修复 |
+| 🔍 | **布局验证** | 检测重叠、箭头绑定问题、间距不一致 |
+| 📏 | **布局助手** | 定位工具和 `auto_labeled_rect` 自动尺寸 |
 | 💾 | **双格式输出** | `.excalidraw`（JSON）或 `.excalidraw.md`（Obsidian） |
 
 > \* AI 图标生成需要 Gemini API 密钥；YAML 样式需要 PyYAML
@@ -161,7 +163,8 @@ save("flow.excalidraw", elements)
 | `labeled_rect` | `labeled_rect(x, y, w, h, label, fill, stroke, sw, fs, label_color, roughness, font_family, fill_style, stroke_style)` | `[rect, text]` |
 | `labeled_ellipse` | `labeled_ellipse(x, y, w, h, label, fill, stroke, sw, fs, label_color, roughness, font_family, fill_style)` | `[ellipse, text]` |
 | `labeled_diamond` | `labeled_diamond(x, y, w, h, label, fill, stroke, sw, fs, label_color, roughness, font_family, fill_style)` | `[diamond, text]` |
-| `text_standalone` | `text_standalone(cx, cy, txt, fs=20, color, font_family=3, roughness=0, text_align="center", max_width=None)` | `dict` |
+| `auto_labeled_rect` | `auto_labeled_rect(x, y, label, padding=10, fs=20, min_width=0, min_height=0, **kwargs)` | `[rect, text]` |
+| `text_standalone` | `text_standalone(cx, cy, txt, fs=20, color, font_family=5, roughness=0, text_align="center", max_width=None)` | `dict` |
 | `arrow` | `arrow(x, y, dx=0, dy=0, *, x2=None, y2=None, stroke, sw, roughness)` | `dict` |
 | `line` | `line(x, y, dx=0, dy=0, *, x2=None, y2=None, stroke, sw, roughness)` | `dict` |
 | `numbered_circle` | `numbered_circle(cx, cy, num, fill, stroke)` | `[ellipse, text]` |
@@ -178,14 +181,33 @@ save("flow.excalidraw", elements)
 
 ## 布局助手
 
-防止文字与形状重叠的定位工具：
+定位工具和自动尺寸：
 
 ```python
-from core.engine import below, right_of, above
+from core.engine import below, right_of, above, auto_labeled_rect
 
 y2 = below(y=100, h=60, gap=15)    # y2 = 175
 x2 = right_of(x=50, w=200, gap=10) # x2 = 260
 y_above = above(y=100, gap=10)     # y_above = 90
+
+# 自动尺寸矩形 — 宽高根据文本内容计算
+els = auto_labeled_rect(0, 0, "你好世界", padding=10, fs=16, min_width=120)
+```
+
+### 布局验证
+
+检测重叠、箭头绑定问题和间距不一致：
+
+```python
+from core.engine import check_overlaps, check_arrow_bindings, check_spacing, verify_layout
+
+report = verify_layout(elements)
+# {"status": "PASS"|"WARN"|"FAIL", "overlaps": [...], "arrow_issues": [...], "spacing_issues": [...], ...}
+
+# 或单独检查
+overlaps = check_overlaps(elements)            # 检测重叠形状
+arrow_issues = check_arrow_bindings(elements)  # 检测断开/未绑定箭头
+spacing = check_spacing(elements)              # 检测不一致间距
 ```
 
 ---
@@ -362,18 +384,21 @@ generate_and_save("k8s-pod", "Kubernetes pod 图标", tags=["k8s", "container"])
 
 ## 样式预设
 
-| 预设 | 字体 | 粗糙度 | 填充 | 适用场景 |
-|------|------|--------|------|---------|
-| **Vivid** | Cascadia (3) | 1 | solid | 丰富多彩、细节丰富 |
-| **Clean** | Helvetica (2) | 0 | solid | 简约精确 |
-| **Sketch** | Virgil (1) | 2 | hachure | 手绘风格 |
+| 预设 | 字体 | 粗糙度 | 填充 | 圆角 | 适用场景 |
+|------|------|--------|------|------|---------|
+| **Vivid** | Helvetica (2) | 0 | solid | 无 | 会议/学术风格 |
+| **Clean** | Helvetica (2) | 0 | solid | 无 | 简约精确 |
+| **Sketch** | Virgil (1) | 1 | hachure | 有 | 手绘风格 |
 
 ```python
 from styles import load_style, vivid_style, clean_style, sketch_style
 
 style = load_style("vivid")
-fill, stroke = style.get_color_pair("primary")  # ("#a5d8ff", "#2B5B84")
-fill, stroke = style.get_color_pair("danger")    # ("#ffc9c9", "#e03131")
+fill, stroke = style.get_color_pair("primary")  # ("#DCEAF6", "#2B5B84")
+fill, stroke = style.get_color_pair("danger")    # ("#FADBD8", "#C0392B")
+
+# 导出样式为机器可读规则（用于管线）
+rules = style.to_style_rules()
 ```
 
 **别名：** `conference` -> `vivid`、`journal` -> `clean`、`ppt` -> `sketch`
@@ -403,6 +428,47 @@ layout:
 然后使用 `load_style("dark-mode")` 加载。
 
 `get_color_pair(role)` 支持：`primary`、`accent`、`success`、`warning`、`danger`、`info`、`neutral`。
+
+---
+
+## 图表管线
+
+确定性管线：规范 → 标准化 → 验证 → 渲染 → 校验 → 修复 → 保存。
+
+```python
+from core.pipeline import generate_diagram, save_generated_diagram
+
+spec = {
+    "diagram_type": "flow",
+    "style": "conference",
+    "nodes": [
+        {"id": "input", "label": "输入", "role": "primary"},
+        {"id": "process", "label": "处理", "role": "info"},
+        {"id": "output", "label": "输出", "role": "accent"},
+    ],
+    "edges": [
+        {"id": "e1", "from_id": "input", "to_id": "process", "label": "清洗"},
+        {"id": "e2", "from_id": "process", "to_id": "output"},
+    ],
+}
+
+result = generate_diagram(spec)
+# result.final_status == "PASS"
+# result.elements → 确定性 Excalidraw 元素
+# result.spec → 标准化后的 DiagramSpec
+
+save_generated_diagram("diagram.excalidraw", result, artifact_dir="artifacts/")
+```
+
+管线核心特性：
+- **确定性输出**：相同规范始终生成相同元素
+- **别名解析**：`"flow"` → `"flowchart"`、`"box"` → `"rectangle"` 等
+- **自动布局**：水平、垂直或网格布局，支持网格对齐
+- **样式契约验证**：检查字体、粗糙度、边框宽度、色板、网格对齐
+- **拓扑验证**：验证所有节点/边已渲染，绑定关系正确
+- **自动修复**：检测到样式问题时从规范重新渲染
+
+支持的 `diagram_type` 值：`flowchart`、`pipeline`、`architecture`、`system`、`comparison`、`concept-map`
 
 ---
 
@@ -480,7 +546,10 @@ excalidraw-generator/
 │   ├── charts.py               # 柱状图、横向柱状图、折线图、饼图
 │   ├── svg_converter.py        # SVG 转 Excalidraw 转换
 │   ├── icon_library.py         # 持久化图标库 & TF-IDF 搜索
-│   └── ai_icons.py             # 通过 Gemini API 生成 AI 图标
+│   ├── ai_icons.py             # 通过 Gemini API 生成 AI 图标
+│   ├── latex.py                # LaTeX 公式渲染
+│   ├── pipeline.py             # 确定性图表管线
+│   └── scene.py                # 场景工具：ID 重映射、文件收集
 ├── styles/
 │   ├── __init__.py
 │   ├── base.py                 # StyleConfig 数据类
@@ -488,6 +557,11 @@ excalidraw-generator/
 │   ├── journal.py              # Clean 预设
 │   ├── ppt.py                  # Sketch 预设
 │   └── loader.py               # 样式解析器 + 自定义 YAML
+├── scripts/
+│   ├── generate_diagram.py     # CLI 图表生成器
+│   ├── golden_rules.py         # Prompt 工程规则
+│   ├── gen_world_model.py      # 世界模型生成器
+│   └── run_ci.py               # CI 测试运行器
 ├── prompts/
 │   ├── conference-prompt.md
 │   ├── journal-prompt.md
@@ -501,17 +575,16 @@ excalidraw-generator/
 │   ├── test_svg_converter.py
 │   ├── test_charts.py
 │   ├── test_icon_library.py
-│   └── test_ai_icons.py
-├── examples/
-│   ├── generate_style_v3.py
-│   ├── generate_p1_demos.py
-│   ├── generate_p2_demos.py
-│   └── *.excalidraw            # 示例输出
-└── assets/
-    ├── icon.svg
-    ├── demo-gallery.png
-    ├── bar-charts-demo.png
-    └── how-it-works.png
+│   ├── test_ai_icons.py
+│   └── test_pipeline.py
+├── .github/
+│   └── workflows/
+│       └── deploy.yml          # GitHub Pages 部署
+└── examples/
+    ├── generate_style_v3.py
+    ├── generate_p1_demos.py
+    ├── generate_p2_demos.py
+    └── *.excalidraw            # 示例输出
 ```
 
 ---

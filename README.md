@@ -12,7 +12,7 @@ Generate publication-quality flowcharts, architecture diagrams, charts, and more
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Claude Code Skill](https://img.shields.io/badge/Claude_Code-Skill-blueviolet?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMkw0IDdWMTdMMTIgMjJMMjAgMTdWN0wxMiAyWiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+)](https://github.com/AlanYu04/excalidraw-generator-skill)
 
-`39 Built-in Icons` · `4 Chart Types` · `3 Style Presets` · `CJK Support` · `LaTeX Formulas` · `Zero Dependencies`
+`39 Built-in Icons` · `4 Chart Types` · `3 Style Presets` · `CJK Support` · `LaTeX Formulas` · `Diagram Pipeline` · `Layout Verification` · `Zero Dependencies`
 
 </div>
 
@@ -31,7 +31,9 @@ Generate publication-quality flowcharts, architecture diagrams, charts, and more
 | 📚 | **Icon Library** | Persistent storage with TF-IDF search (zero-dep) or OpenAI embeddings |
 | 🇨🇳 | **Full CJK Support** | Chinese, Japanese, Korean text rendering |
 | 🇨 | **LaTeX Formulas** | Mathtext + usetex fallback with 4 font options |
-| 📏 | **Layout Helpers** | Prevent text/shape overlap with positional utilities |
+| 🔗 | **Diagram Pipeline** | Deterministic spec → render → validate → repair pipeline |
+| 🔍 | **Layout Verification** | Detect overlaps, arrow binding issues, spacing inconsistencies |
+| 📏 | **Layout Helpers** | Positional utilities and `auto_labeled_rect` for auto-sizing |
 | 💾 | **Dual Output** | `.excalidraw` (JSON) or `.excalidraw.md` (Obsidian) |
 
 > \* AI icon generation requires a Gemini API key; YAML styles require PyYAML
@@ -161,7 +163,8 @@ save("flow.excalidraw", elements)
 | `labeled_rect` | `labeled_rect(x, y, w, h, label, fill, stroke, sw, fs, label_color, roughness, font_family, fill_style, stroke_style)` | `[rect, text]` |
 | `labeled_ellipse` | `labeled_ellipse(x, y, w, h, label, fill, stroke, sw, fs, label_color, roughness, font_family, fill_style)` | `[ellipse, text]` |
 | `labeled_diamond` | `labeled_diamond(x, y, w, h, label, fill, stroke, sw, fs, label_color, roughness, font_family, fill_style)` | `[diamond, text]` |
-| `text_standalone` | `text_standalone(cx, cy, txt, fs=20, color, font_family=3, roughness=0, text_align="center", max_width=None)` | `dict` |
+| `auto_labeled_rect` | `auto_labeled_rect(x, y, label, padding=10, fs=20, min_width=0, min_height=0, **kwargs)` | `[rect, text]` |
+| `text_standalone` | `text_standalone(cx, cy, txt, fs=20, color, font_family=5, roughness=0, text_align="center", max_width=None)` | `dict` |
 | `arrow` | `arrow(x, y, dx=0, dy=0, *, x2=None, y2=None, stroke, sw, roughness)` | `dict` |
 | `line` | `line(x, y, dx=0, dy=0, *, x2=None, y2=None, stroke, sw, roughness)` | `dict` |
 | `numbered_circle` | `numbered_circle(cx, cy, num, fill, stroke)` | `[ellipse, text]` |
@@ -178,14 +181,33 @@ save("flow.excalidraw", elements)
 
 ## Layout Helpers
 
-Prevent text/shape overlap with positional helpers:
+Positional utilities and auto-sizing:
 
 ```python
-from core.engine import below, right_of, above
+from core.engine import below, right_of, above, auto_labeled_rect
 
 y2 = below(y=100, h=60, gap=15)    # y2 = 175
 x2 = right_of(x=50, w=200, gap=10) # x2 = 260
 y_above = above(y=100, gap=10)     # y_above = 90
+
+# Auto-sized rectangle — width/height calculated from text
+els = auto_labeled_rect(0, 0, "Hello World", padding=10, fs=16, min_width=120)
+```
+
+### Layout Verification
+
+Check diagrams for overlaps, arrow binding issues, and spacing inconsistencies:
+
+```python
+from core.engine import check_overlaps, check_arrow_bindings, check_spacing, verify_layout
+
+report = verify_layout(elements)
+# {"status": "PASS"|"WARN"|"FAIL", "overlaps": [...], "arrow_issues": [...], "spacing_issues": [...], ...}
+
+# Or check individually
+overlaps = check_overlaps(elements)            # Detect overlapping shapes
+arrow_issues = check_arrow_bindings(elements)  # Detect dead/unbound arrows
+spacing = check_spacing(elements)              # Detect inconsistent gaps
 ```
 
 ---
@@ -371,18 +393,21 @@ generate_and_save("k8s-pod", "Kubernetes pod icon", tags=["k8s", "container"])
 
 ## Styles
 
-| Preset | Font | Roughness | Fill Style | Use Case |
-|--------|------|-----------|------------|----------|
-| **Vivid** | Cascadia (3) | 1 | solid | Rich, colorful, detailed |
-| **Clean** | Helvetica (2) | 0 | solid | Minimal, B&W, precise |
-| **Sketch** | Virgil (1) | 2 | hachure | Hand-drawn, casual |
+| Preset | Font | Roughness | Fill Style | Border Radius | Use Case |
+|--------|------|-----------|------------|---------------|----------|
+| **Vivid** | Helvetica (2) | 0 | solid | no | Conference-safe, academic |
+| **Clean** | Helvetica (2) | 0 | solid | no | Minimal, B&W, precise |
+| **Sketch** | Virgil (1) | 1 | hachure | yes | Hand-drawn, casual |
 
 ```python
 from styles import load_style, vivid_style, clean_style, sketch_style
 
 style = load_style("vivid")
-fill, stroke = style.get_color_pair("primary")  # ("#a5d8ff", "#2B5B84")
-fill, stroke = style.get_color_pair("danger")    # ("#ffc9c9", "#e03131")
+fill, stroke = style.get_color_pair("primary")  # ("#DCEAF6", "#2B5B84")
+fill, stroke = style.get_color_pair("danger")    # ("#FADBD8", "#C0392B")
+
+# Export style as machine-readable rules (used by the pipeline)
+rules = style.to_style_rules()
 ```
 
 **Aliases:** `conference` -> `vivid`, `journal` -> `clean`, `ppt` -> `sketch`
@@ -412,6 +437,47 @@ layout:
 Then load with `load_style("dark-mode")`.
 
 `get_color_pair(role)` supports: `primary`, `accent`, `success`, `warning`, `danger`, `info`, `neutral`.
+
+---
+
+## Diagram Pipeline
+
+Deterministic pipeline: spec → normalize → validate → render → verify → repair → save.
+
+```python
+from core.pipeline import generate_diagram, save_generated_diagram
+
+spec = {
+    "diagram_type": "flow",
+    "style": "conference",
+    "nodes": [
+        {"id": "input", "label": "Input", "role": "primary"},
+        {"id": "process", "label": "Process", "role": "info"},
+        {"id": "output", "label": "Output", "role": "accent"},
+    ],
+    "edges": [
+        {"id": "e1", "from_id": "input", "to_id": "process", "label": "clean"},
+        {"id": "e2", "from_id": "process", "to_id": "output"},
+    ],
+}
+
+result = generate_diagram(spec)
+# result.final_status == "PASS"
+# result.elements → deterministic Excalidraw elements
+# result.spec → normalized DiagramSpec
+
+save_generated_diagram("diagram.excalidraw", result, artifact_dir="artifacts/")
+```
+
+Key pipeline features:
+- **Deterministic output**: same spec always produces identical elements
+- **Alias resolution**: `"flow"` → `"flowchart"`, `"box"` → `"rectangle"`, etc.
+- **Auto-layout**: horizontal, vertical, or grid placement with grid snapping
+- **Style contract validation**: checks font, roughness, border width, color palette, grid alignment
+- **Topology validation**: verifies all nodes/edges are rendered, bindings are correct
+- **Auto-repair**: re-renders from spec if style issues are detected
+
+Supported `diagram_type` values: `flowchart`, `pipeline`, `architecture`, `system`, `comparison`, `concept-map`
 
 ---
 
@@ -489,7 +555,10 @@ excalidraw-generator/
 │   ├── charts.py               # Bar, horizontal bar, line, pie charts
 │   ├── svg_converter.py        # SVG to Excalidraw conversion
 │   ├── icon_library.py         # Persistent icon library & TF-IDF search
-│   └── ai_icons.py             # AI icon generation via Gemini API
+│   ├── ai_icons.py             # AI icon generation via Gemini API
+│   ├── latex.py                # LaTeX formula rendering
+│   ├── pipeline.py             # Deterministic diagram pipeline
+│   └── scene.py                # Scene utilities: ID remapping, file collection
 ├── styles/
 │   ├── __init__.py
 │   ├── base.py                 # StyleConfig dataclass
@@ -497,6 +566,11 @@ excalidraw-generator/
 │   ├── journal.py              # Clean preset
 │   ├── ppt.py                  # Sketch preset
 │   └── loader.py               # Style resolver + custom YAML
+├── scripts/
+│   ├── generate_diagram.py     # CLI diagram generator
+│   ├── golden_rules.py         # Prompt engineering rules
+│   ├── gen_world_model.py      # World model generator
+│   └── run_ci.py               # CI test runner
 ├── prompts/
 │   ├── conference-prompt.md
 │   ├── journal-prompt.md
@@ -510,17 +584,16 @@ excalidraw-generator/
 │   ├── test_svg_converter.py
 │   ├── test_charts.py
 │   ├── test_icon_library.py
-│   └── test_ai_icons.py
-├── examples/
-│   ├── generate_style_v3.py
-│   ├── generate_p1_demos.py
-│   ├── generate_p2_demos.py
-│   └── *.excalidraw            # Example outputs
-└── assets/
-    ├── icon.svg
-    ├── demo-gallery.png
-    ├── bar-charts-demo.png
-    └── how-it-works.png
+│   ├── test_ai_icons.py
+│   └── test_pipeline.py
+├── .github/
+│   └── workflows/
+│       └── deploy.yml          # GitHub Pages deployment
+└── examples/
+    ├── generate_style_v3.py
+    ├── generate_p1_demos.py
+    ├── generate_p2_demos.py
+    └── *.excalidraw            # Example outputs
 ```
 
 ---
