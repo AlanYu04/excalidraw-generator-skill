@@ -16,7 +16,6 @@ generate_*.py
 # VitePress site
 site/node_modules/
 site/.vitepress/
-site/package-lock.json
 
 # Stray images
 image*.png
